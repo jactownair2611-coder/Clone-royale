@@ -62,7 +62,7 @@ generateLoot(buildings, world);
 const camera = {
   x: 0,
   y: 0,
-  zoom: 1.7
+  zoom: 2.4
 };
 
 // ============================================
