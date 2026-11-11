@@ -246,6 +246,7 @@ const inventory = {
 // LOOT INTERACTION
 // ============================================
 
+
 function interactWithLoot() {
   const item = findNearbyLoot(player.x, player.y, 65);
 
@@ -262,22 +263,16 @@ function interactWithLoot() {
   }
 
   // Collect weapons.
-  if (type === "weapon") {
-  const weapon = choose(weaponDatabase);
-
-  item.name = weapon.name;
-  item.category = weapon.category;
-  item.damage = weapon.damage;
-  item.fireRate = weapon.fireRate;
-  item.magazine = weapon.magazine;
-  item.icon = weapon.icon;
-}
-
+  if (item.type === "weapon") {
     inventory.weapons.push({
       name: item.name,
-      rarity: item.rarity
+      category: item.category,
+      rarity: item.rarity,
+      damage: item.damage,
+      fireRate: item.fireRate,
+      magazine: item.magazine,
+      icon: item.icon
     });
-
   }
 
   // Collect ammunition.
