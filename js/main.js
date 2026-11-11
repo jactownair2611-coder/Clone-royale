@@ -763,10 +763,6 @@ function gameLoop(now) {
   dt = Math.min(dt, 0.05);
 
   updatePlayer(dt);
-    if (isIndoors()) {
-    updateInteriorPlayer(dt);
-    return;
-  }
   updateBots(dt);
   updateCamera();
 
