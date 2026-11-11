@@ -400,6 +400,50 @@ export function openChest(chest) {
 // DRAW LOOT
 // ============================================
 
+function drawWeaponIcon(ctx, item) {
+  ctx.save();
+
+  ctx.translate(item.x, item.y);
+  ctx.rotate(-Math.PI / 4);
+
+  ctx.fillStyle = "#e5edf5";
+  ctx.strokeStyle = "#101820";
+  ctx.lineWidth = 1.5;
+
+  const category = item.category;
+
+  if (category === "Pistol") {
+    ctx.fillRect(-10, -3, 19, 6);
+    ctx.fillRect(-5, 2, 7, 9);
+    ctx.fillRect(7, -2, 5, 4);
+
+  } else if (category === "Sniper") {
+    ctx.fillRect(-16, -2, 32, 4);
+    ctx.fillRect(-4, 2, 8, 5);
+    ctx.fillRect(-3, -5, 7, 3);
+    ctx.fillRect(-15, -1, 5, 2);
+
+  } else if (category === "Shotgun") {
+    ctx.fillRect(-15, -3, 29, 6);
+    ctx.fillRect(-4, 2, 9, 8);
+    ctx.fillRect(8, -1, 8, 3);
+
+  } else if (category === "SMG") {
+    ctx.fillRect(-13, -3, 25, 6);
+    ctx.fillRect(-3, 2, 7, 8);
+    ctx.fillRect(5, -5, 5, 3);
+
+  } else {
+    // Assault rifle.
+    ctx.fillRect(-15, -3, 30, 6);
+    ctx.fillRect(-5, 2, 8, 9);
+    ctx.fillRect(1, -6, 9, 3);
+    ctx.fillRect(12, -1, 7, 3);
+  }
+
+  ctx.restore();
+}
+
 export function drawLoot(ctx) {
   for (const item of lootItems) {
     const rarity =
@@ -493,44 +537,25 @@ export function drawLoot(ctx) {
       ctx.lineWidth = 3;
       ctx.stroke();
 
-      // Item icon.
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 14px Arial";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
+     
+// Item icon.
+if (item.type === "weapon") {
+  drawWeaponIcon(ctx, item);
+} else {
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 14px Arial";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
 
-      let symbol = "?";
+  let symbol = "?";
 
-      if (item.type === "weapon") {
-  const icons = {
-    "ar": "AR",
-    "ak": "AK",
-    "tactical-ar": "TAR",
-    "pistol": "P",
-    "heavy-pistol": "HP",
-    "revolver": "R",
-    "bolt-sniper": "BS",
-    "semi-sniper": "SS",
-    "dmr": "DMR",
-    "pump": "PS",
-    "tactical-shotgun": "TS",
-    "double-barrel": "DB",
-    "compact-smg": "C",
-    "tactical-smg": "T",
-    "suppressed-smg": "S"
-  };
+  if (item.type === "ammo") symbol = "A";
+  if (item.type === "medkit") symbol = "+";
+  if (item.type === "shield") symbol = "S";
 
-  symbol = icons[item.icon] || "W";
+  ctx.fillText(symbol, item.x, item.y + 1);
 }
-      if (item.type === "ammo") symbol = "A";
-      if (item.type === "medkit") symbol = "+";
-      if (item.type === "shield") symbol = "S";
 
-      ctx.fillText(
-        symbol,
-        item.x,
-        item.y + 1
-      );
     }
 
     ctx.restore();
