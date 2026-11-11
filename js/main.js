@@ -17,8 +17,11 @@ import {
 } from "./interiors.js";
 import {
   generateLoot,
-  drawLoot
-} from "./loot.js";
+  drawLoot,
+  findNearbyLoot,
+  removeLoot,
+  openChest
+} from "./loot.js";;
 // ============================================
 // CANVAS
 // ============================================
@@ -73,11 +76,13 @@ window.addEventListener("keydown", event => {
   keys[key] = true;
   if (key === "e" && !event.repeat) {
 
-    if (isIndoors()) {
-      tryExitBuilding();
-    } else {
-      tryEnterBuilding();
-    }
+  if (isIndoors()) {
+    tryExitBuilding();
+  } else if (!interactWithLoot()) {
+    tryEnterBuilding();
+  }
+
+}
 
   }
   if (["w", "a", "s", "d", " "].includes(key)) {
@@ -227,6 +232,131 @@ const player = {
   color: "#35a9ff",
   health: 100
 };
+// ============================================
+// PLAYER INVENTORY - VERSION 0.3.1
+// ============================================
+
+const inventory = {
+  weapons: [],
+  maxWeapons: 2,
+  ammo: {},
+  medkits: 0,
+  shields: 0
+};
+
+// ============================================
+// LOOT INTERACTION
+// ============================================
+
+function interactWithLoot() {
+  const item = findNearbyLoot(player.x, player.y, 65);
+
+  if (!item) return false;
+
+  // Open supply chest.
+  if (item.type === "chest") {
+    const rewards = openChest(item);
+
+    document.getElementById("status").textContent =
+      "Supply chest opened! " + rewards.length + " rewards released.";
+
+    return true;
+  }
+
+  // Collect weapons.
+  if (type === "weapon") {
+  const weapon = choose(weaponDatabase);
+
+  item.name = weapon.name;
+  item.category = weapon.category;
+  item.damage = weapon.damage;
+  item.fireRate = weapon.fireRate;
+  item.magazine = weapon.magazine;
+  item.icon = weapon.icon;
+}
+
+    inventory.weapons.push({
+      name: item.name,
+      rarity: item.rarity
+    });
+
+  }
+
+  // Collect ammunition.
+  if (item.type === "ammo") {
+    inventory.ammo[item.name] =
+      (inventory.ammo[item.name] || 0) + item.amount;
+  }
+
+  // Collect medkits.
+  if (item.type === "medkit") {
+    inventory.medkits++;
+  }
+
+  // Collect shield potions.
+  if (item.type === "shield") {
+    inventory.shields++;
+  }
+
+  removeLoot(item.id);
+
+  document.getElementById("status").textContent =
+    "Collected: " + item.name;
+
+  return true;
+}
+
+// ============================================
+// INVENTORY HUD
+// ============================================
+
+function drawInventoryHUD() {
+  const x = 18;
+  const y = canvas.height - 142;
+
+  ctx.save();
+
+  ctx.fillStyle = "rgba(10,18,28,0.88)";
+  ctx.fillRect(x, y, 285, 124);
+
+  ctx.strokeStyle = "#8295a8";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x, y, 285, 124);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 15px Arial";
+  ctx.textAlign = "left";
+
+  ctx.fillText("INVENTORY", x + 12, y + 21);
+
+  ctx.font = "13px Arial";
+
+  ctx.fillText(
+    "Weapon 1: " + (inventory.weapons[0]?.name || "Empty"),
+    x + 12, y + 44
+  );
+
+  ctx.fillText(
+    "Weapon 2: " + (inventory.weapons[1]?.name || "Empty"),
+    x + 12, y + 63
+  );
+
+  ctx.fillText(
+    "Medkits: " + inventory.medkits +
+    "    Shields: " + inventory.shields,
+    x + 12, y + 84
+  );
+
+  const ammoTotal = Object.values(inventory.ammo)
+    .reduce((total, amount) => total + amount, 0);
+
+  ctx.fillText(
+    "Total ammo: " + ammoTotal,
+    x + 12, y + 105
+  );
+
+  ctx.restore();
+}
 // ============================================
 // BUILDING INTERIOR STATE
 // ============================================
