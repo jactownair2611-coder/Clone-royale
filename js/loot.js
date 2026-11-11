@@ -1,149 +1,265 @@
 
- // ============================================
- // ULTIMATE ROYALE
- // LOOT ENGINE - VERSION 0.3.1
- // ============================================
+// ============================================
+// ULTIMATE ROYALE
+// LOOT ENGINE - VERSION 0.3.1
+// ============================================
 
-import { world, buildings } from "./world.js";
+export const lootItems = [];
 
-export const loot = [];
+let nextLootId = 1;
 
-export const lootTypes = {
-  pistol: {
-    name: "Pistol",
-    category: "weapon",
-    color: "#b8bdc5",
-    rarity: "Common"
+const rarities = {
+  common: {
+    color: "#b8c2cc",
+    multiplier: 1
   },
-  rifle: {
-    name: "Assault Rifle",
-    category: "weapon",
-    color: "#55a86b",
-    rarity: "Uncommon"
+  uncommon: {
+    color: "#45c96b",
+    multiplier: 1.2
   },
-  shotgun: {
-    name: "Shotgun",
-    category: "weapon",
-    color: "#478bd2",
-    rarity: "Rare"
+  rare: {
+    color: "#398cff",
+    multiplier: 1.5
   },
-  sniper: {
-    name: "Sniper Rifle",
-    category: "weapon",
-    color: "#a66bd1",
-    rarity: "Epic"
+  epic: {
+    color: "#b34cff",
+    multiplier: 1.8
   },
-  ammo: {
-    name: "Ammo",
-    category: "ammo",
-    color: "#e5c64d",
-    rarity: "Common"
-  },
-  medkit: {
-    name: "Medkit",
-    category: "healing",
-    color: "#e65b5b",
-    rarity: "Uncommon"
-  },
-  shield: {
-    name: "Shield Potion",
-    category: "healing",
-    color: "#54c9e8",
-    rarity: "Rare"
-  },
-  chest: {
-    name: "Supply Chest",
-    category: "chest",
-    color: "#e8b84e",
-    rarity: "Rare"
+  legendary: {
+    color: "#ffae32",
+    multiplier: 2.2
   }
 };
-
-// ============================================
-// RANDOM HELPERS
-// ============================================
 
 function random(min, max) {
   return Math.random() * (max - min) + min;
 }
 
-function insideIsland(x, y) {
-  const dx = (x - 2000) / 1880;
-  const dy = (y - 1600) / 1480;
-  return dx * dx + dy * dy < 0.90;
+function choose(array) {
+  return array[Math.floor(Math.random() * array.length)];
 }
 
-function overlapsBuilding(x, y, radius = 20) {
-  return buildings.some(b => {
-    const closestX = Math.max(b.x, Math.min(x, b.x + b.w));
-    const closestY = Math.max(b.y, Math.min(y, b.y + b.h));
+function chooseRarity() {
+  const roll = Math.random();
 
-    const dx = x - closestX;
-    const dy = y - closestY;
+  if (roll < 0.48) return "common";
+  if (roll < 0.75) return "uncommon";
+  if (roll < 0.91) return "rare";
+  if (roll < 0.98) return "epic";
 
-    return dx * dx + dy * dy < radius * radius;
-  });
+  return "legendary";
 }
 
-// ============================================
-// LOOT SPAWNING
-// ============================================
-
-function findLootPosition() {
-  for (let attempt = 0; attempt < 300; attempt++) {
-    const x = random(130, world.width - 130);
-    const y = random(130, world.height - 130);
-
-    if (
-      insideIsland(x, y) &&
-      !overlapsBuilding(x, y, 35)
-    ) {
-      return { x, y };
-    }
-  }
-
-  return { x: 2000, y: 1600 };
-}
-
-function addLoot(type, x, y, amount = 1) {
-  loot.push({
-    id: loot.length + 1,
+function createItem(type, x, y, rarity = "common") {
+  const item = {
+    id: nextLootId++,
     type,
     x,
     y,
-    amount,
-    radius: 13,
-    collected: false
-  });
-}
-
-export function spawnLoot() {
-  loot.length = 0;
-
-  const spawnCounts = {
-    pistol: 45,
-    rifle: 35,
-    shotgun: 20,
-    sniper: 12,
-    ammo: 100,
-    medkit: 40,
-    shield: 30,
-    chest: 25
+    rarity,
+    radius: type === "chest" ? 17 : 12,
+    opened: false
   };
 
-  for (const [type, count] of Object.entries(spawnCounts)) {
-    for (let i = 0; i < count; i++) {
-      const position = findLootPosition();
+  if (type === "weapon") {
+    item.name = choose([
+      "Pistol",
+      "Assault Rifle",
+      "SMG",
+      "Shotgun",
+      "Sniper Rifle",
+      "LMG"
+    ]);
+  }
 
-      const amount = type === "ammo"
-        ? Math.floor(random(20, 61))
-        : 1;
+  if (type === "ammo") {
+    item.name = choose([
+      "Light Ammo",
+      "Medium Ammo",
+      "Heavy Ammo",
+      "Shells"
+    ]);
 
-      addLoot(type, position.x, position.y, amount);
+    item.amount = Math.floor(random(20, 61));
+  }
+
+  if (type === "medkit") {
+    item.name = "Medkit";
+    item.amount = 50;
+  }
+
+  if (type === "shield") {
+    item.name = "Shield Potion";
+    item.amount = 25;
+  }
+
+  if (type === "chest") {
+    item.name = "Supply Chest";
+  }
+
+  return item;
+}
+
+// ============================================
+// LOOT GENERATION
+// ============================================
+
+export function generateLoot(buildings, world) {
+  lootItems.length = 0;
+  nextLootId = 1;
+
+  const availableBuildings = buildings.filter(building =>
+    building.x > 50 &&
+    building.y > 50 &&
+    building.x + building.w < world.width - 50 &&
+    building.y + building.h < world.height - 50
+  );
+
+  for (let i = 0; i < availableBuildings.length; i++) {
+    const building = availableBuildings[i];
+
+    const centerX = building.x + building.w / 2;
+    const centerY = building.y + building.h / 2;
+
+    // Place loot around the building exterior.
+    const itemCount = Math.floor(random(1, 4));
+
+    for (let j = 0; j < itemCount; j++) {
+      const side = Math.floor(random(0, 4));
+      let x;
+      let y;
+
+      if (side === 0) {
+        x = random(building.x, building.x + building.w);
+        y = building.y - random(30, 65);
+      } else if (side === 1) {
+        x = random(building.x, building.x + building.w);
+        y = building.y + building.h + random(30, 65);
+      } else if (side === 2) {
+        x = building.x - random(30, 65);
+        y = random(building.y, building.y + building.h);
+      } else {
+        x = building.x + building.w + random(30, 65);
+        y = random(building.y, building.y + building.h);
+      }
+
+      x = Math.max(25, Math.min(world.width - 25, x));
+      y = Math.max(25, Math.min(world.height - 25, y));
+
+      const roll = Math.random();
+
+      let type;
+
+      if (roll < 0.48) {
+        type = "weapon";
+      } else if (roll < 0.77) {
+        type = "ammo";
+      } else if (roll < 0.90) {
+        type = "medkit";
+      } else {
+        type = "shield";
+      }
+
+      lootItems.push(
+        createItem(type, x, y, chooseRarity())
+      );
+    }
+
+    // Supply chests appear less frequently.
+    if (i % 5 === 0 && Math.random() < 0.8) {
+      lootItems.push(
+        createItem(
+          "chest",
+          centerX + random(-100, 100),
+          centerY + random(-100, 100)
+        )
+      );
     }
   }
 
-  console.log("LOOT SYSTEM:", loot.length, "items spawned");
+  console.log(
+    "Loot generated:",
+    lootItems.length,
+    "items"
+  );
+}
+
+// ============================================
+// FIND NEAREST LOOT
+// ============================================
+
+export function findNearbyLoot(x, y, radius = 65) {
+  let closest = null;
+  let closestDistance = radius;
+
+  for (const item of lootItems) {
+    const distance = Math.hypot(
+      item.x - x,
+      item.y - y
+    );
+
+    if (distance < closestDistance) {
+      closest = item;
+      closestDistance = distance;
+    }
+  }
+
+  return closest;
+}
+
+// ============================================
+// REMOVE PICKED-UP ITEM
+// ============================================
+
+export function removeLoot(id) {
+  const index = lootItems.findIndex(
+    item => item.id === id
+  );
+
+  if (index === -1) return false;
+
+  lootItems.splice(index, 1);
+
+  return true;
+}
+
+// ============================================
+// OPEN SUPPLY CHEST
+// ============================================
+
+export function openChest(chest) {
+  if (!chest || chest.type !== "chest") return [];
+
+  if (chest.opened) return [];
+
+  chest.opened = true;
+
+  removeLoot(chest.id);
+
+  const rewards = [];
+
+  const rewardTypes = [
+    "weapon",
+    "ammo",
+    "medkit",
+    "shield"
+  ];
+
+  for (let i = 0; i < 3; i++) {
+    const type = choose(rewardTypes);
+
+    const reward = createItem(
+      type,
+      chest.x + random(-35, 35),
+      chest.y + random(-35, 35),
+      chooseRarity()
+    );
+
+    lootItems.push(reward);
+    rewards.push(reward);
+  }
+
+  return rewards;
 }
 
 // ============================================
@@ -151,89 +267,118 @@ export function spawnLoot() {
 // ============================================
 
 export function drawLoot(ctx) {
-  for (const item of loot) {
-    if (item.collected) continue;
+  for (const item of lootItems) {
+    const rarity =
+      rarities[item.rarity] || rarities.common;
 
-    const info = lootTypes[item.type];
+    ctx.save();
 
-    // Shadow
-    ctx.fillStyle = "rgba(0,0,0,0.22)";
+    // Ground shadow.
+    ctx.fillStyle = "rgba(0,0,0,0.28)";
     ctx.beginPath();
     ctx.ellipse(
-      item.x + 3,
-      item.y + 6,
-      13,
-      7,
+      item.x + 2,
+      item.y + 7,
+      item.radius + 3,
+      item.radius * 0.65,
       0,
       0,
       Math.PI * 2
     );
     ctx.fill();
 
-    // Loot background
-    ctx.fillStyle = info.color;
-    ctx.beginPath();
-    ctx.arc(item.x, item.y, item.radius, 0, Math.PI * 2);
-    ctx.fill();
+    if (item.type === "chest") {
+      // Supply chest.
+      ctx.fillStyle = item.opened
+        ? "#77502c"
+        : "#b77a35";
 
-    // Outline
-    ctx.strokeStyle = "#ffffff";
-    ctx.lineWidth = 2;
-    ctx.stroke();
+      ctx.fillRect(
+        item.x - 15,
+        item.y - 11,
+        30,
+        23
+      );
 
-    // Simple icon
-    ctx.fillStyle = "#17232b";
-    ctx.font = "bold 13px Arial";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
+      ctx.fillStyle = "#e5b75c";
+      ctx.fillRect(
+        item.x - 15,
+        item.y - 3,
+        30,
+        5
+      );
 
-    const icons = {
-      pistol: "P",
-      rifle: "R",
-      shotgun: "S",
-      sniper: "N",
-      ammo: "A",
-      medkit: "+",
-      shield: "D",
-      chest: "C"
-    };
+      ctx.fillStyle = "#fff0b0";
+      ctx.fillRect(
+        item.x - 3,
+        item.y - 3,
+        6,
+        6
+      );
 
-    ctx.fillText(icons[item.type], item.x, item.y);
-  }
-}
+      ctx.strokeStyle = "#51351d";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(
+        item.x - 15,
+        item.y - 11,
+        30,
+        23
+      );
 
-// ============================================
-// FIND NEAREST LOOT
-// ============================================
+    } else {
+      // Item rarity glow.
+      ctx.fillStyle = rarity.color;
+      ctx.globalAlpha = 0.22;
 
-export function findNearbyLoot(x, y, maxDistance = 55) {
-  let nearest = null;
-  let nearestDistance = maxDistance;
+      ctx.beginPath();
+      ctx.arc(
+        item.x,
+        item.y,
+        item.radius + 7,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
 
-  for (const item of loot) {
-    if (item.collected) continue;
+      ctx.globalAlpha = 1;
 
-    const distance = Math.hypot(
-      x - item.x,
-      y - item.y
-    );
+      // Item background.
+      ctx.fillStyle = "#202a35";
+      ctx.beginPath();
+      ctx.arc(
+        item.x,
+        item.y,
+        item.radius + 2,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
 
-    if (distance < nearestDistance) {
-      nearest = item;
-      nearestDistance = distance;
+      // Rarity border.
+      ctx.strokeStyle = rarity.color;
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // Item icon.
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 14px Arial";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+
+      let symbol = "?";
+
+      if (item.type === "weapon") symbol = "W";
+      if (item.type === "ammo") symbol = "A";
+      if (item.type === "medkit") symbol = "+";
+      if (item.type === "shield") symbol = "S";
+
+      ctx.fillText(
+        symbol,
+        item.x,
+        item.y + 1
+      );
     }
+
+    ctx.restore();
   }
-
-  return nearest;
-}
-
-// ============================================
-// REMOVE COLLECTED LOOT
-// ============================================
-
-export function collectLoot(item) {
-  if (!item || item.collected) return false;
-
-  item.collected = true;
-  return true;
 }
