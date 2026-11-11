@@ -199,8 +199,8 @@ function tryEnterBuilding() {
       drawInterior(interiorCtx, currentInterior);
 
       interiorPlayer = {
-  x: 450,
-  y: 570,
+  x: currentInterior.width / 2,
+  y: currentInterior.height - 80,
   radius: 15,
   speed: 190,
   color: "#35a9ff"
