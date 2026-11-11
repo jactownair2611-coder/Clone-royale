@@ -17,6 +17,7 @@ function getInteriorDimensions(building) {
 // INTERIOR GENERATOR
 // ============================================
 
+
 export function createInterior(building) {
 
   const type = building.type;
@@ -40,40 +41,31 @@ export function createInterior(building) {
       w: 100,
       h: 25
     }
-  };};
+  };
 
-  // ============================================
-// RESPONSIVE OUTER WALLS
-// ============================================
+  // RESPONSIVE OUTER WALLS
 
-const t = 22;
-const W = INTERIOR_WIDTH;
-const H = INTERIOR_HEIGHT;
-const centerX = W / 2;
-const doorwayWidth = 120;
-
-interior.walls.push(
-  { x: 0, y: 0, w: W, h: t },
-  { x: 0, y: 0, w: t, h: H },
-  { x: W - t, y: 0, w: t, h: H },
-  { x: 0, y: H - t, w: centerX - doorwayWidth / 2, h: t },
-  {
-    x: centerX + doorwayWidth / 2,
-    y: H - t,
-    w: centerX - doorwayWidth / 2,
-    h: t
-  }
-);
+  const t = 22;
+  const W = INTERIOR_WIDTH;
+  const H = INTERIOR_HEIGHT;
+  const centerX = W / 2;
+  const doorwayWidth = 120;
 
   interior.walls.push(
-    { x: 0, y: 0, w: INTERIOR_WIDTH, h: t },
-    { x: 0, y: 0, w: t, h: INTERIOR_HEIGHT },
-    { x: INTERIOR_WIDTH - t, y: 0, w: t, h: INTERIOR_HEIGHT },
-    { x: 0, y: INTERIOR_HEIGHT - t, w: 400, h: t },
-    { x: 500, y: INTERIOR_HEIGHT - t, w: 400, h: t }
+    { x: 0, y: 0, w: W, h: t },
+    { x: 0, y: 0, w: t, h: H },
+    { x: W - t, y: 0, w: t, h: H },
+    { x: 0, y: H - t, w: centerX - doorwayWidth / 2, h: t },
+    {
+      x: centerX + doorwayWidth / 2,
+      y: H - t,
+      w: centerX - doorwayWidth / 2,
+      h: t
+    }
   );
 
-  // Interior layout depends on building type.
+  // INTERIOR LAYOUT
+
   switch (type) {
 
     case "house":
