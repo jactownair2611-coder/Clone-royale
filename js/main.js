@@ -85,6 +85,7 @@ window.addEventListener("keydown", event => {
 }
 
   }
+   )                     
   if (["w", "a", "s", "d", " "].includes(key)) {
     event.preventDefault();
   }
@@ -238,7 +239,7 @@ const player = {
 
 const inventory = {
   weapons: [],
-  maxWeapons: 2,
+  maxWeapons: 4,
   ammo: {},
   medkits: 0,
   shields: 0
