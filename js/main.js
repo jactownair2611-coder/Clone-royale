@@ -71,21 +71,18 @@ const camera = {
 const keys = {};
 
 window.addEventListener("keydown", event => {
-  const key = event.key.toLowerCase()
-    );
+  const key = event.key.toLowerCase();
 
   keys[key] = true;
+
   if (key === "e" && !event.repeat) {
-
-  if (isIndoors()) {
-    tryExitBuilding();
-  } else if (!interactWithLoot()) {
-    tryEnterBuilding();
+    if (isIndoors()) {
+      tryExitBuilding();
+    } else if (!interactWithLoot()) {
+      tryEnterBuilding();
+    }
   }
-
-}
-
-  }                     
+});
   if (["w", "a", "s", "d", " "].includes(key)) {
     event.preventDefault();
   }
