@@ -163,11 +163,12 @@ function tryEnterBuilding() {
       drawInterior(interiorCtx, currentInterior);
 
       interiorPlayer = {
-        x: 450,
-        y: 570,
-        radius: 15,
-        speed: 190
-      };
+  x: 450,
+  y: 570,
+  radius: 15,
+  speed: 190,
+  color: "#35a9ff"
+};
 
       document.getElementById("status").textContent =
         "Inside: " + currentInterior.name + " | Press E near EXIT to leave";
