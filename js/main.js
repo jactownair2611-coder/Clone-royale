@@ -141,6 +141,32 @@ function overlapsBuilding(x, y, radius) {
 
   return false;
 }
+
+// ============================================
+// TREE COLLISION
+// ============================================
+
+function overlapsTree(x, y, radius) {
+
+  for (const tree of trees) {
+
+    const dx = x - tree.x;
+    const dy = y - tree.y;
+
+    const collisionRadius = radius + tree.radius * 0.75;
+
+    if (
+      dx * dx + dy * dy <
+      collisionRadius * collisionRadius
+    ) {
+      return true;
+    }
+
+  }
+
+  return false;
+}
+
 // ============================================
 // BUILDING ENTRY AND EXIT
 // ============================================
@@ -383,6 +409,7 @@ function findBotSpawn() {
     if (
       insideIsland(x, y) &&
       !overlapsBuilding(x, y, 18) &&
+!overlapsTree(x, y, 18) &&
       Math.hypot(x - player.x, y - player.y) > 180
     ) {
       return { x, y };
@@ -536,16 +563,18 @@ function updatePlayer(dt) {
   const nextY = player.y + dy * speed * dt;
 
   if (
-    insideIsland(nextX, player.y) &&
-    !overlapsBuilding(nextX, player.y, player.radius)
-  ) {
+  insideIsland(nextX, player.y) &&
+  !overlapsBuilding(nextX, player.y, player.radius) &&
+  !overlapsTree(nextX, player.y, player.radius)
+) { 
     player.x = nextX;
   }
 
   if (
-    insideIsland(player.x, nextY) &&
-    !overlapsBuilding(player.x, nextY, player.radius)
-  ) {
+  insideIsland(player.x, nextY) &&
+  !overlapsBuilding(player.x, nextY, player.radius) &&
+  !overlapsTree(player.x, nextY, player.radius)
+) {
     player.y = nextY;
   }
 }
@@ -577,9 +606,9 @@ function updateBots(dt) {
     const nextY = bot.y + dy * bot.speed * dt;
 
     const blocked =
-      !insideIsland(nextX, nextY) ||
-      overlapsBuilding(nextX, nextY, bot.radius);
-
+  !insideIsland(nextX, nextY) ||
+  overlapsBuilding(nextX, nextY, bot.radius) ||
+  overlapsTree(nextX, nextY, bot.radius);
     if (!blocked) {
 
       bot.x = nextX;
