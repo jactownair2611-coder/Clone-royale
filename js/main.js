@@ -87,6 +87,15 @@ window.addEventListener("keydown", event => {
     }
   }
 });
+window.addEventListener("keyup", event => {
+  const key = event.key.toLowerCase();
+  keys[key] = false;
+});
+window.addEventListener("blur", () => {
+  for (const key in keys) {
+    keys[key] = false;
+  }
+});
 // ============================================
 // UTILITIES
 // ============================================
