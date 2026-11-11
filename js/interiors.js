@@ -4,9 +4,14 @@
 // INTERIOR ENGINE - VERSION 0.2.1
 // ============================================
 
-// Interior dimensions
-const INTERIOR_WIDTH = 900;
-const INTERIOR_HEIGHT = 650;
+const INTERIOR_SCALE = 3.2;
+
+function getInteriorDimensions(building) {
+  return {
+    width: Math.max(900, Math.round(building.w * INTERIOR_SCALE)),
+    height: Math.max(650, Math.round(building.h * INTERIOR_SCALE))
+  };
+}
 
 // ============================================
 // INTERIOR GENERATOR
@@ -15,6 +20,10 @@ const INTERIOR_HEIGHT = 650;
 export function createInterior(building) {
 
   const type = building.type;
+  const dimensions = getInteriorDimensions(building);
+
+  const INTERIOR_WIDTH = dimensions.width;
+  const INTERIOR_HEIGHT = dimensions.height;
 
   const interior = {
     width: INTERIOR_WIDTH,
@@ -26,15 +35,35 @@ export function createInterior(building) {
     walls: [],
     furniture: [],
     exit: {
-      x: 450,
-      y: 625,
+      x: INTERIOR_WIDTH / 2 - 50,
+      y: INTERIOR_HEIGHT - 25,
       w: 100,
       h: 25
     }
-  };
+  };};
 
-  // Outer walls, with a doorway in the south wall.
-  const t = 22;
+  // ============================================
+// RESPONSIVE OUTER WALLS
+// ============================================
+
+const t = 22;
+const W = INTERIOR_WIDTH;
+const H = INTERIOR_HEIGHT;
+const centerX = W / 2;
+const doorwayWidth = 120;
+
+interior.walls.push(
+  { x: 0, y: 0, w: W, h: t },
+  { x: 0, y: 0, w: t, h: H },
+  { x: W - t, y: 0, w: t, h: H },
+  { x: 0, y: H - t, w: centerX - doorwayWidth / 2, h: t },
+  {
+    x: centerX + doorwayWidth / 2,
+    y: H - t,
+    w: centerX - doorwayWidth / 2,
+    h: t
+  }
+);
 
   interior.walls.push(
     { x: 0, y: 0, w: INTERIOR_WIDTH, h: t },
