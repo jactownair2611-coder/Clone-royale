@@ -196,15 +196,15 @@ function createItem(type, x, y, rarity = "common") {
   };
 
   if (type === "weapon") {
-    item.name = choose([
-      "Pistol",
-      "Assault Rifle",
-      "SMG",
-      "Shotgun",
-      "Sniper Rifle",
-      "LMG"
-    ]);
-  }
+  const weapon = choose(weaponDatabase);
+
+  item.name = weapon.name;
+  item.category = weapon.category;
+  item.damage = weapon.damage;
+  item.fireRate = weapon.fireRate;
+  item.magazine = weapon.magazine;
+  item.icon = weapon.icon;
+}
 
   if (type === "ammo") {
     item.name = choose([
@@ -501,7 +501,27 @@ export function drawLoot(ctx) {
 
       let symbol = "?";
 
-      if (item.type === "weapon") symbol = "W";
+      if (item.type === "weapon") {
+  const icons = {
+    "ar": "AR",
+    "ak": "AK",
+    "tactical-ar": "TAR",
+    "pistol": "P",
+    "heavy-pistol": "HP",
+    "revolver": "R",
+    "bolt-sniper": "BS",
+    "semi-sniper": "SS",
+    "dmr": "DMR",
+    "pump": "PS",
+    "tactical-shotgun": "TS",
+    "double-barrel": "DB",
+    "compact-smg": "C",
+    "tactical-smg": "T",
+    "suppressed-smg": "S"
+  };
+
+  symbol = icons[item.icon] || "W";
+}
       if (item.type === "ammo") symbol = "A";
       if (item.type === "medkit") symbol = "+";
       if (item.type === "shield") symbol = "S";
