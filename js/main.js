@@ -373,7 +373,15 @@ function updateInteriorPlayer(dt) {
   }
 }
 
+
 function updatePlayer(dt) {
+
+  // INTERIOR MOVEMENT
+  // When indoors, update the interior character instead.
+  if (isIndoors()) {
+    updateInteriorPlayer(dt);
+    return;
+  }
 
   let dx = 0;
   let dy = 0;
@@ -396,8 +404,6 @@ function updatePlayer(dt) {
   const nextX = player.x + dx * speed * dt;
   const nextY = player.y + dy * speed * dt;
 
-  // Horizontal collision
-
   if (
     insideIsland(nextX, player.y) &&
     !overlapsBuilding(nextX, player.y, player.radius)
@@ -405,16 +411,14 @@ function updatePlayer(dt) {
     player.x = nextX;
   }
 
-  // Vertical collision
-
   if (
     insideIsland(player.x, nextY) &&
     !overlapsBuilding(player.x, nextY, player.radius)
   ) {
     player.y = nextY;
   }
-
 }
+
 
 // ============================================
 // AI BOT UPDATE
