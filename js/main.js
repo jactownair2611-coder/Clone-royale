@@ -11,7 +11,10 @@ import {
   pois,
   drawWorld
 } from "./world.js";
-
+import {
+  createInterior,
+  drawInterior
+} from "./interiors.js";
 // ============================================
 // CANVAS
 // ============================================
@@ -60,7 +63,15 @@ window.addEventListener("keydown", event => {
   const key = event.key.toLowerCase();
 
   keys[key] = true;
+  if (key === "e" && !event.repeat) {
 
+    if (isIndoors()) {
+      tryExitBuilding();
+    } else {
+      tryEnterBuilding();
+    }
+
+  }
   if (["w", "a", "s", "d", " "].includes(key)) {
     event.preventDefault();
   }
@@ -120,7 +131,81 @@ function overlapsBuilding(x, y, radius) {
 
   return false;
 }
+// ============================================
+// BUILDING ENTRY AND EXIT
+// ============================================
 
+function tryEnterBuilding() {
+
+  if (isIndoors()) return;
+
+  for (const building of buildings) {
+
+    // Entrance is centered along the south side.
+    const entranceX = building.x + building.w / 2;
+    const entranceY = building.y + building.h + 25;
+
+    const distance = Math.hypot(
+      player.x - entranceX,
+      player.y - entranceY
+    );
+
+    if (distance < 75) {
+
+      currentBuilding = building;
+      currentInterior = createInterior(building);
+
+      interiorCanvas = document.createElement("canvas");
+      interiorCanvas.width = currentInterior.width;
+      interiorCanvas.height = currentInterior.height;
+
+      const interiorCtx = interiorCanvas.getContext("2d");
+      drawInterior(interiorCtx, currentInterior);
+
+      interiorPlayer = {
+        x: 450,
+        y: 570,
+        radius: 15,
+        speed: 190
+      };
+
+      document.getElementById("status").textContent =
+        "Inside: " + currentInterior.name + " | Press E near EXIT to leave";
+
+      return;
+    }
+  }
+
+}
+
+function tryExitBuilding() {
+
+  if (!isIndoors()) return;
+
+  const exit = currentInterior.exit;
+
+  const nearExit =
+    interiorPlayer.x + interiorPlayer.radius > exit.x &&
+    interiorPlayer.x - interiorPlayer.radius < exit.x + exit.w &&
+    Math.abs(interiorPlayer.y - exit.y) < 45;
+
+  if (!nearExit) return;
+
+  // Return outside, just south of the building.
+  player.x = currentBuilding.x + currentBuilding.w / 2;
+  player.y = currentBuilding.y + currentBuilding.h + 35;
+
+  currentBuilding = null;
+  currentInterior = null;
+  interiorCanvas = null;
+  interiorPlayer = null;
+
+  updateCamera();
+
+  document.getElementById("status").textContent =
+    "Version 0.2.1 | Back outside | 49 AI bots deployed";
+
+}
 // ============================================
 // PLAYER
 // ============================================
@@ -133,7 +218,18 @@ const player = {
   color: "#35a9ff",
   health: 100
 };
+// ============================================
+// BUILDING INTERIOR STATE
+// ============================================
 
+let currentBuilding = null;
+let currentInterior = null;
+let interiorCanvas = null;
+let interiorPlayer = null;
+
+function isIndoors() {
+  return currentInterior !== null;
+}
 // ============================================
 // AI BOT SPAWNING
 // ============================================
@@ -448,7 +544,49 @@ function drawMinimap() {
 function render() {
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  // ==========================================
+  // INTERIOR RENDERING
+  // ==========================================
 
+  if (isIndoors()) {
+
+    const scale = Math.min(
+      canvas.width / currentInterior.width,
+      canvas.height / currentInterior.height
+    );
+
+    const offsetX =
+      (canvas.width - currentInterior.width * scale) / 2;
+
+    const offsetY =
+      (canvas.height - currentInterior.height * scale) / 2;
+
+    ctx.save();
+
+    ctx.translate(offsetX, offsetY);
+    ctx.scale(scale, scale);
+
+    ctx.drawImage(interiorCanvas, 0, 0);
+
+    drawCharacter(interiorPlayer, true);
+
+    ctx.restore();
+
+    ctx.fillStyle = "rgba(0,0,0,0.75)";
+    ctx.fillRect(15, 85, 300, 38);
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 15px Arial";
+    ctx.textAlign = "left";
+
+    ctx.fillText(
+      "WASD: Move | E: Exit",
+      27,
+      109
+    );
+
+    return;
+  }
   // Draw only the visible portion of the island.
 
   ctx.drawImage(
@@ -492,7 +630,13 @@ function render() {
 // ============================================
 
 function updateLocation() {
+  if (isIndoors()) {
 
+    document.getElementById("poi").textContent =
+      currentInterior.name;
+
+    return;
+  }
   let nearest = "Island";
   let nearestDistance = Infinity;
 
@@ -548,6 +692,10 @@ function gameLoop(now) {
   dt = Math.min(dt, 0.05);
 
   updatePlayer(dt);
+    if (isIndoors()) {
+    updateInteriorPlayer(dt);
+    return;
+  }
   updateBots(dt);
   updateCamera();
 
