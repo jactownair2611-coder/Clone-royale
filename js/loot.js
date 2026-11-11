@@ -30,7 +30,141 @@ const rarities = {
     multiplier: 2.2
   }
 };
+// ============================================
+// WEAPON DATABASE
+// ============================================
 
+export const weaponDatabase = [
+  // ASSAULT RIFLES
+  {
+    name: "AR-15",
+    category: "Assault Rifle",
+    damage: 25,
+    fireRate: 8,
+    magazine: 30,
+    icon: "ar"
+  },
+  {
+    name: "AK-47",
+    category: "Assault Rifle",
+    damage: 32,
+    fireRate: 6,
+    magazine: 30,
+    icon: "ak"
+  },
+  {
+    name: "Tactical AR",
+    category: "Assault Rifle",
+    damage: 23,
+    fireRate: 9,
+    magazine: 35,
+    icon: "tactical-ar"
+  },
+
+  // PISTOLS
+  {
+    name: "Pistol",
+    category: "Pistol",
+    damage: 18,
+    fireRate: 4,
+    magazine: 15,
+    icon: "pistol"
+  },
+  {
+    name: "Heavy Pistol",
+    category: "Pistol",
+    damage: 35,
+    fireRate: 2,
+    magazine: 8,
+    icon: "heavy-pistol"
+  },
+  {
+    name: "Revolver",
+    category: "Pistol",
+    damage: 42,
+    fireRate: 1.5,
+    magazine: 6,
+    icon: "revolver"
+  },
+
+  // SNIPERS
+  {
+    name: "Bolt Sniper",
+    category: "Sniper",
+    damage: 85,
+    fireRate: 0.8,
+    magazine: 5,
+    icon: "bolt-sniper"
+  },
+  {
+    name: "Semi-Auto Sniper",
+    category: "Sniper",
+    damage: 55,
+    fireRate: 2,
+    magazine: 10,
+    icon: "semi-sniper"
+  },
+  {
+    name: "DMR",
+    category: "Sniper",
+    damage: 45,
+    fireRate: 3,
+    magazine: 12,
+    icon: "dmr"
+  },
+
+  // SHOTGUNS
+  {
+    name: "Pump Shotgun",
+    category: "Shotgun",
+    damage: 70,
+    fireRate: 1,
+    magazine: 5,
+    icon: "pump"
+  },
+  {
+    name: "Tactical Shotgun",
+    category: "Shotgun",
+    damage: 48,
+    fireRate: 2,
+    magazine: 8,
+    icon: "tactical-shotgun"
+  },
+  {
+    name: "Double Barrel",
+    category: "Shotgun",
+    damage: 90,
+    fireRate: 0.7,
+    magazine: 2,
+    icon: "double-barrel"
+  },
+
+  // SMGS
+  {
+    name: "Compact SMG",
+    category: "SMG",
+    damage: 17,
+    fireRate: 12,
+    magazine: 30,
+    icon: "compact-smg"
+  },
+  {
+    name: "Tactical SMG",
+    category: "SMG",
+    damage: 19,
+    fireRate: 10,
+    magazine: 35,
+    icon: "tactical-smg"
+  },
+  {
+    name: "Suppressed SMG",
+    category: "SMG",
+    damage: 16,
+    fireRate: 9,
+    magazine: 30,
+    icon: "suppressed-smg"
+  }
+];
 function random(min, max) {
   return Math.random() * (max - min) + min;
 }
