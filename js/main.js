@@ -86,7 +86,7 @@ window.addEventListener("keydown", event => {
   if (["w", "a", "s", "d", " "].includes(key)) {
     event.preventDefault();
   }
-});
+
 
 window.addEventListener("keyup", event => {
   keys[event.key.toLowerCase()] = false;
