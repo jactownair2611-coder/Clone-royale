@@ -15,6 +15,10 @@ import {
   createInterior,
   drawInterior
 } from "./interiors.js";
+import {
+  generateLoot,
+  drawLoot
+} from "./loot.js";
 // ============================================
 // CANVAS
 // ============================================
@@ -43,7 +47,11 @@ worldCanvas.height = world.height;
 const worldCtx = worldCanvas.getContext("2d");
 
 drawWorld(worldCtx);
+// ============================================
+// LOOT GENERATION - VERSION 0.3.1
+// ============================================
 
+generateLoot(buildings, world);
 // ============================================
 // CAMERA
 // ============================================
@@ -680,7 +688,8 @@ function render() {
   ctx.save();
 
   ctx.translate(-camera.x, -camera.y);
-
+// Draw ground loot and supply chests
+drawLoot(ctx);
   // AI bots
 
   for (const bot of bots) {
