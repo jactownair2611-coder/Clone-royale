@@ -75,6 +75,10 @@ window.addEventListener("keydown", event => {
 
   keys[key] = true;
 
+  if (["w", "a", "s", "d", " "].includes(key)) {
+    event.preventDefault();
+  }
+
   if (key === "e" && !event.repeat) {
     if (isIndoors()) {
       tryExitBuilding();
@@ -83,21 +87,6 @@ window.addEventListener("keydown", event => {
     }
   }
 });
-  if (["w", "a", "s", "d", " "].includes(key)) {
-    event.preventDefault();
-  }
-
-
-window.addEventListener("keyup", event => {
-  keys[event.key.toLowerCase()] = false;
-});
-
-window.addEventListener("blur", () => {
-  for (const key in keys) {
-    keys[key] = false;
-  }
-});
-
 // ============================================
 // UTILITIES
 // ============================================
