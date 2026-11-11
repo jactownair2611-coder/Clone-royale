@@ -61,7 +61,8 @@ generateLoot(buildings, world);
 
 const camera = {
   x: 0,
-  y: 0
+  y: 0,
+  zoom: 1.7
 };
 
 // ============================================
@@ -599,22 +600,27 @@ function updateBots(dt) {
 // CAMERA UPDATE
 // ============================================
 
+
 function updateCamera() {
 
-  camera.x = player.x - canvas.width / 2;
-  camera.y = player.y - canvas.height / 2;
+  const viewWidth = canvas.width / camera.zoom;
+  const viewHeight = canvas.height / camera.zoom;
+
+  camera.x = player.x - viewWidth / 2;
+  camera.y = player.y - viewHeight / 2;
 
   camera.x = Math.max(
     0,
-    Math.min(camera.x, world.width - canvas.width)
+    Math.min(camera.x, world.width - viewWidth)
   );
 
   camera.y = Math.max(
     0,
-    Math.min(camera.y, world.height - canvas.height)
+    Math.min(camera.y, world.height - viewHeight)
   );
 
 }
+
 
 // ============================================
 // DRAW CHARACTERS
@@ -792,23 +798,31 @@ function render() {
 
     return;
   }
-  // Draw only the visible portion of the island.
+  
+// Draw the zoomed-in portion of the island.
 
-  ctx.drawImage(
-    worldCanvas,
-    camera.x,
-    camera.y,
-    canvas.width,
-    canvas.height,
-    0,
-    0,
-    canvas.width,
-    canvas.height
-  );
+const viewWidth = canvas.width / camera.zoom;
+const viewHeight = canvas.height / camera.zoom;
 
-  ctx.save();
+ctx.drawImage(
+  worldCanvas,
+  camera.x,
+  camera.y,
+  viewWidth,
+  viewHeight,
+  0,
+  0,
+  canvas.width,
+  canvas.height
+);
 
-  ctx.translate(-camera.x, -camera.y);
+// Apply the same zoom to characters and loot.
+
+ctx.save();
+
+ctx.scale(camera.zoom, camera.zoom);
+ctx.translate(-camera.x, -camera.y);
+
 // Draw ground loot and supply chests
 drawLoot(ctx);
   // AI bots
