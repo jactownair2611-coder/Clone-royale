@@ -302,6 +302,77 @@ for (let i = 0; i < 49; i++) {
 // PLAYER UPDATE
 // ============================================
 
+function interiorBlocked(x, y) {
+  const radius = interiorPlayer.radius;
+
+  if (
+    x < radius + 22 ||
+    x > currentInterior.width - radius - 22 ||
+    y < radius + 22 ||
+    y > currentInterior.height - radius
+  ) {
+    return true;
+  }
+
+  for (const wall of currentInterior.walls) {
+    const closestX = Math.max(wall.x, Math.min(x, wall.x + wall.w));
+    const closestY = Math.max(wall.y, Math.min(y, wall.y + wall.h));
+
+    const dx = x - closestX;
+    const dy = y - closestY;
+
+    if (dx * dx + dy * dy < radius * radius) {
+      return true;
+    }
+  }
+
+  for (const item of currentInterior.furniture) {
+    if (item.type === "walkway") continue;
+
+    const closestX = Math.max(item.x, Math.min(x, item.x + item.w));
+    const closestY = Math.max(item.y, Math.min(y, item.y + item.h));
+
+    const dx = x - closestX;
+    const dy = y - closestY;
+
+    if (dx * dx + dy * dy < radius * radius) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function updateInteriorPlayer(dt) {
+  let dx = 0;
+  let dy = 0;
+
+  if (keys["w"]) dy--;
+  if (keys["s"]) dy++;
+  if (keys["a"]) dx--;
+  if (keys["d"]) dx++;
+
+  const length = Math.hypot(dx, dy);
+
+  if (length > 0) {
+    dx /= length;
+    dy /= length;
+  }
+
+  const speed = interiorPlayer.speed * (keys["shift"] ? 1.5 : 1);
+
+  const nextX = interiorPlayer.x + dx * speed * dt;
+  const nextY = interiorPlayer.y + dy * speed * dt;
+
+  if (!interiorBlocked(nextX, interiorPlayer.y)) {
+    interiorPlayer.x = nextX;
+  }
+
+  if (!interiorBlocked(interiorPlayer.x, nextY)) {
+    interiorPlayer.y = nextY;
+  }
+}
+
 function updatePlayer(dt) {
 
   let dx = 0;
