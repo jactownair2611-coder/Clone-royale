@@ -74,67 +74,57 @@ const locations = [
 
 pois.push(...locations);
 
-// ============================================
-// ROAD NETWORK
-// ============================================
+ // ============================================
+ // ROAD NETWORK - VERSION 0.4.1
+ // ============================================
 
 roads.push(
   {
     points: [
-      [250,1500],[700,1450],[1150,1510],[1600,1580],
-      [2100,1510],[2600,1430],[3150,1400],[3750,1500]
+      [250,1250],
+      [700,1200],
+      [1150,1240],
+      [1600,1280],
+      [2100,1250],
+      [2600,1190],
+      [3150,1160],
+      [3750,1250]
     ],
-    width: 82,
+    width: 70,
     type: "highway"
   },
   {
     points: [
-      [500,1100],[850,950],[1250,900],[1750,930],
-      [2200,870],[2700,780],[3500,750]
+      [300,350],
+      [900,350],
+      [1500,390],
+      [2100,390],
+      [2400,420]
     ],
-    width: 46,
+    width: 38,
     type: "road"
   },
   {
     points: [
-      [400,2200],[850,2250],[1250,2300],[1750,2180],
-      [2200,2200],[2750,2300],[3500,2200]
+      [300,2850],
+      [900,2800],
+      [1500,2820],
+      [2100,2850],
+      [2700,2800],
+      [3300,2820],
+      [3700,2850]
     ],
-    width: 46,
+    width: 42,
     type: "road"
-  },
-  {
-    points: [[1250,1350],[1270,1650],[1300,1980],[1350,2150]],
-    width: 30,
-    type: "street"
-  },
-  {
-    points: [[1050,1510],[1450,1510]],
-    width: 24,
-    type: "street"
-  },
-  {
-    points: [[1050,1800],[1450,1800]],
-    width: 24,
-    type: "street"
-  },
-  {
-    points: [[2800,390],[2800,720],[3100,720]],
-    width: 28,
-    type: "street"
-  },
-  {
-    points: [[3100,1180],[3100,1710],[3370,1710]],
-    width: 28,
-    type: "street"
   }
 );
 
-// ============================================
-// BUILDING GENERATION
-// ============================================
 
-function overlapsExisting(x, y, w, h, gap = 22) {
+ // ============================================
+ // BUILDING GENERATION - VERSION 0.4.1
+ // ============================================
+
+function overlapsExisting(x, y, w, h, gap = 30) {
   return buildings.some(b =>
     x < b.x + b.w + gap &&
     x + w + gap > b.x &&
@@ -145,11 +135,7 @@ function overlapsExisting(x, y, w, h, gap = 22) {
 
 function addBuilding(x, y, w, h, type, style = 0) {
   const building = {
-    x,
-    y,
-    w,
-    h,
-    type,
+    x, y, w, h, type,
     style: Math.floor(style) % 4
   };
 
@@ -157,8 +143,11 @@ function addBuilding(x, y, w, h, type, style = 0) {
   return building;
 }
 
-function tryBuilding(x, y, w, h, type, gap = 20) {
-  if (!insideIsland(x + w / 2, y + h / 2, 70)) return false;
+function tryBuilding(x, y, w, h, type, gap = 30) {
+
+  if (!insideIsland(x + w / 2, y + h / 2, 70)) {
+    return false;
+  }
 
   if (
     nearRoad(
@@ -166,83 +155,124 @@ function tryBuilding(x, y, w, h, type, gap = 20) {
       y + h / 2,
       Math.max(w, h) * 0.55
     )
-  ) return false;
+  ) {
+    return false;
+  }
 
-  if (overlapsExisting(x, y, w, h, gap)) return false;
+  if (overlapsExisting(x, y, w, h, gap)) {
+    return false;
+  }
 
   addBuilding(x, y, w, h, type, random(0, 4));
   return true;
 }
 
-// Grand City
-for (let row = 0; row < 4; row++) {
-  for (let col = 0; col < 5; col++) {
-    const w = random(78, 112);
-    const h = random(68, 98);
+// ============================================
+// GRAND CITY
+// ============================================
 
-    const x = 600 + col * 112 + random(-7, 7);
-    const y = 610 + row * 112 + random(-7, 7);
+for (let row = 0; row < 3; row++) {
+  for (let col = 0; col < 3; col++) {
 
-    tryBuilding(x, y, w, h, "city", 15);
+    const x = 480 + col * 240;
+    const y = 480 + row * 220;
+
+    tryBuilding(x, y, 210, 180, "city", 30);
   }
 }
 
-for (const b of [
-  [490,760,88,105],
-  [1120,700,105,88],
-  [700,1080,115,82],
-  [1050,1040,100,90]
-]) {
-  tryBuilding(...b, "city", 18);
-}
+// ============================================
+// PINEWOOD SUBURBS
+// ============================================
 
-// Pinewood Suburbs
-for (let row = 0; row < 4; row++) {
-  for (let col = 0; col < 5; col++) {
-    const w = random(58, 76);
-    const h = random(48, 66);
+for (let row = 0; row < 3; row++) {
+  for (let col = 0; col < 3; col++) {
 
-    const x = 1010 + col * 105 + random(-5, 5);
-    const y = 1515 + row * 100 + random(-5, 5);
+    const x = 900 + col * 210;
+    const y = 1600 + row * 180;
 
-    tryBuilding(x, y, w, h, "house", 22);
+    tryBuilding(x, y, 180, 150, "house", 30);
   }
 }
 
-// Airport
-addBuilding(2700, 405, 125, 88, "hangar", 1);
-addBuilding(2860, 405, 125, 88, "hangar", 2);
-addBuilding(3020, 405, 125, 88, "hangar", 3);
-addBuilding(2700, 535, 125, 88, "hangar", 0);
-addBuilding(2860, 535, 125, 88, "hangar", 1);
-addBuilding(3020, 535, 125, 88, "hangar", 2);
-addBuilding(2840, 735, 285, 105, "terminal", 0);
+// ============================================
+// INTERNATIONAL AIRPORT
+// ============================================
 
-// Military Base
-addBuilding(3090, 1280, 135, 95, "military", 0);
-addBuilding(3270, 1280, 115, 85, "military", 1);
-addBuilding(3090, 1485, 115, 90, "military", 2);
-addBuilding(3260, 1500, 135, 95, "military", 3);
-addBuilding(3160, 1660, 120, 78, "military", 1);
+// Large aircraft hangars
 
-// Power Plant
-addBuilding(1840, 540, 145, 105, "industrial", 0);
-addBuilding(2020, 525, 135, 115, "industrial", 1);
-addBuilding(2200, 575, 125, 95, "industrial", 2);
-addBuilding(1900, 710, 130, 90, "industrial", 3);
-addBuilding(2080, 715, 145, 100, "industrial", 1);
+for (let row = 0; row < 2; row++) {
+  for (let col = 0; col < 3; col++) {
 
-// Harbor
-addBuilding(470, 2460, 145, 95, "warehouse", 0);
-addBuilding(665, 2500, 120, 82, "warehouse", 2);
+    const x = 2520 + col * 300;
+    const y = 500 + row * 230;
 
-// Research Facility
-addBuilding(2620, 2310, 145, 105, "research", 0);
-addBuilding(2810, 2310, 145, 105, "research", 1);
-addBuilding(2710, 2470, 155, 95, "research", 2);
+    tryBuilding(x, y, 270, 190, "hangar", 30);
+  }
+}
 
-// Mega Mall
-addBuilding(1750, 2410, 310, 205, "mall", 0);
+// Main terminal
+
+tryBuilding(
+  2670, 960,
+  500, 210,
+  "terminal",
+  40
+);
+
+// ============================================
+// MILITARY BASE
+// ============================================
+
+for (let row = 0; row < 2; row++) {
+  for (let col = 0; col < 2; col++) {
+
+    const x = 2920 + col * 310;
+    const y = 1360 + row * 240;
+
+    tryBuilding(x, y, 260, 190, "military", 35);
+  }
+}
+
+// ============================================
+// POWER PLANT
+// ============================================
+
+for (let row = 0; row < 2; row++) {
+  for (let col = 0; col < 3; col++) {
+
+    const x = 1710 + col * 290;
+    const y = 520 + row * 240;
+
+    tryBuilding(x, y, 250, 190, "industrial", 35);
+  }
+}
+
+// ============================================
+// SEASIDE HARBOR
+// ============================================
+
+tryBuilding(380, 2440, 300, 210, "warehouse", 40);
+tryBuilding(720, 2450, 280, 200, "warehouse", 40);
+
+// ============================================
+// RESEARCH FACILITY
+// ============================================
+
+tryBuilding(2570, 2200, 260, 190, "research", 35);
+tryBuilding(2870, 2200, 260, 190, "research", 35);
+tryBuilding(2720, 2440, 280, 200, "research", 35);
+
+// ============================================
+// MEGA MALL
+// ============================================
+
+tryBuilding(
+  1600, 2280,
+  520, 360,
+  "mall",
+  50
+);
 
 // ============================================
 // AIRPORT RUNWAYS
@@ -265,15 +295,15 @@ for (let i = 0; i < 1450; i++) {
   if (nearRoad(x, y, 45)) continue;
 
   if (
-    locations.some(p => Math.hypot(x - p.x, y - p.y) < 310)
+    locations.some(p => Math.hypot(x - p.x, y - p.y) < 360)
   ) continue;
 
   if (
     buildings.some(b =>
-      x > b.x - 45 &&
-      x < b.x + b.w + 45 &&
-      y > b.y - 45 &&
-      y < b.y + b.h + 45
+      x > b.x - 75 &&
+      x < b.x + b.w + 75 &&
+      y > b.y - 75 &&
+      y < b.y + b.h + 75
     )
   ) continue;
 
