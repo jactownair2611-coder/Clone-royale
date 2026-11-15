@@ -198,9 +198,9 @@ function tryEnterBuilding() {
       const interiorCtx = interiorCanvas.getContext("2d");
       drawInterior(interiorCtx, currentInterior);
 
-      interiorPlayer = {
+   interiorPlayer = {
   x: currentInterior.width / 2,
-  y: currentInterior.height - 80,
+  y: currentInterior.height - 65,
   radius: 15,
   speed: 190,
   color: "#35a9ff"
