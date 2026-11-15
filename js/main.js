@@ -517,7 +517,8 @@ function updateInteriorPlayer(dt) {
     dy /= length;
   }
 
-  const speed = interiorPlayer.speed * (keys["shift"] ? 1.5 : 1);
+  const speed = interiorPlayer.speed *
+    (keys["shift"] ? 1.5 : 1);
 
   const nextX = interiorPlayer.x + dx * speed * dt;
   const nextY = interiorPlayer.y + dy * speed * dt;
