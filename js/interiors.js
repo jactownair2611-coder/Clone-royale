@@ -1,15 +1,14 @@
 
 // ============================================
 // ULTIMATE ROYALE
-// INTERIOR ENGINE - VERSION 0.2.1
+// INTERIOR ENGINE - VERSION 0.4.2
+// RESPONSIVE INTERIOR GENERATOR
 // ============================================
-
-const INTERIOR_SCALE = 3.2;
 
 function getInteriorDimensions(building) {
   return {
-    width: Math.max(900, Math.round(building.w * INTERIOR_SCALE)),
-    height: Math.max(650, Math.round(building.h * INTERIOR_SCALE))
+    width: building.w,
+    height: building.h
   };
 }
 
@@ -17,18 +16,19 @@ function getInteriorDimensions(building) {
 // INTERIOR GENERATOR
 // ============================================
 
-
 export function createInterior(building) {
-
   const type = building.type;
   const dimensions = getInteriorDimensions(building);
 
-  const INTERIOR_WIDTH = dimensions.width;
-  const INTERIOR_HEIGHT = dimensions.height;
+  const W = 900;
+  const H = 650;
+
+  const scaleX = dimensions.width / W;
+  const scaleY = dimensions.height / H;
 
   const interior = {
-    width: INTERIOR_WIDTH,
-    height: INTERIOR_HEIGHT,
+    width: dimensions.width,
+    height: dimensions.height,
     type,
     name: getInteriorName(type),
     floorColor: getFloorColor(type),
@@ -36,20 +36,17 @@ export function createInterior(building) {
     walls: [],
     furniture: [],
     exit: {
-      x: INTERIOR_WIDTH / 2 - 50,
-      y: INTERIOR_HEIGHT - 25,
-      w: 100,
+      x: 330,
+      y: H - 25,
+      w: 240,
       h: 25
     }
   };
 
-  // RESPONSIVE OUTER WALLS
-
+  // OUTER WALLS
   const t = 22;
-  const W = INTERIOR_WIDTH;
-  const H = INTERIOR_HEIGHT;
   const centerX = W / 2;
-  const doorwayWidth = 120;
+  const doorwayWidth = 240;
 
   interior.walls.push(
     { x: 0, y: 0, w: W, h: t },
@@ -65,9 +62,7 @@ export function createInterior(building) {
   );
 
   // INTERIOR LAYOUT
-
   switch (type) {
-
     case "house":
     case "suburbs":
       addHouseLayout(interior);
@@ -103,9 +98,28 @@ export function createInterior(building) {
       break;
   }
 
+  // SCALE ALL INTERIOR OBJECTS TO THE BUILDING
+  for (const wall of interior.walls) {
+    wall.x *= scaleX;
+    wall.y *= scaleY;
+    wall.w *= scaleX;
+    wall.h *= scaleY;
+  }
+
+  for (const item of interior.furniture) {
+    item.x *= scaleX;
+    item.y *= scaleY;
+    item.w *= scaleX;
+    item.h *= scaleY;
+  }
+
+  interior.exit.x *= scaleX;
+  interior.exit.y *= scaleY;
+  interior.exit.w *= scaleX;
+  interior.exit.h *= scaleY;
+
   return interior;
 }
-
 // ============================================
 // INTERIOR NAMES AND COLORS
 // ============================================
