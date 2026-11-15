@@ -479,13 +479,4 @@ export function drawInterior(ctx, interior) {
     interior.exit.y - 17
   );
 
-  // Building title
-  ctx.fillStyle = "rgba(0,0,0,0.7)";
-  ctx.fillRect(20, 28, 300, 42);
-
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 19px Arial";
-  ctx.textAlign = "left";
-  ctx.fillText(interior.name, 34, 56);
-
 }
