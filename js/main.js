@@ -213,6 +213,32 @@ function tryEnterBuilding() {
     }
   }
 }
+function tryExitBuilding() {
+  if (!isIndoors()) return;
+
+  const exit = currentInterior.exit;
+
+  const nearExit =
+    interiorPlayer.x + interiorPlayer.radius > exit.x &&
+    interiorPlayer.x - interiorPlayer.radius < exit.x + exit.w &&
+    Math.abs(interiorPlayer.y - exit.y) < 45;
+
+  if (!nearExit) return;
+
+  player.x = currentBuilding.x + currentBuilding.w / 2;
+  player.y = currentBuilding.y + currentBuilding.h + 35;
+
+  currentBuilding = null;
+  currentInterior = null;
+  interiorCanvas = null;
+  interiorPlayer = null;
+
+  updateCamera();
+
+  document.getElementById("status").textContent =
+    "Version 0.4.2 | Back outside | 49 AI bots deployed";
+}
+
 // ============================================
 // PLAYER
 // ============================================
@@ -434,14 +460,42 @@ function interiorBlocked(x, y) {
   const radius = interiorPlayer.radius;
 
   if (
-    x < radius + 22 ||
-    x > currentInterior.width - radius - 22 ||
-    y < radius + 22 ||
-    y > currentInterior.height - radius
+    x < radius + 4 ||
+    x > currentInterior.width - radius - 4 ||
+    y < radius + 4 ||
+    y > currentInterior.height - radius - 4
   ) {
     return true;
   }
 
+  for (const wall of currentInterior.walls) {
+    const closestX = Math.max(wall.x, Math.min(x, wall.x + wall.w));
+    const closestY = Math.max(wall.y, Math.min(y, wall.y + wall.h));
+
+    const dx = x - closestX;
+    const dy = y - closestY;
+
+    if (dx * dx + dy * dy < radius * radius) {
+      return true;
+    }
+  }
+
+  for (const item of currentInterior.furniture) {
+    if (item.type === "walkway") continue;
+
+    const closestX = Math.max(item.x, Math.min(x, item.x + item.w));
+    const closestY = Math.max(item.y, Math.min(y, item.y + item.h));
+
+    const dx = x - closestX;
+    const dy = y - closestY;
+
+    if (dx * dx + dy * dy < radius * radius) {
+      return true;
+    }
+  }
+
+  return false;
+}
   for (const wall of currentInterior.walls) {
     const closestX = Math.max(wall.x, Math.min(x, wall.x + wall.w));
     const closestY = Math.max(wall.y, Math.min(y, wall.y + wall.h));
@@ -486,6 +540,23 @@ function updateInteriorPlayer(dt) {
     dx /= length;
     dy /= length;
   }
+
+  const speed = interiorPlayer.speed * (keys["shift"] ? 1.5 : 1);
+
+  const nextX = interiorPlayer.x + dx * speed * dt;
+  const nextY = interiorPlayer.y + dy * speed * dt;
+
+  if (!interiorBlocked(nextX, interiorPlayer.y)) {
+    interiorPlayer.x = nextX;
+  }
+
+  if (!interiorBlocked(interiorPlayer.x, nextY)) {
+    interiorPlayer.y = nextY;
+  }
+
+  player.x = currentBuilding.x + interiorPlayer.x;
+  player.y = currentBuilding.y + interiorPlayer.y;
+}
 
   const speed = interiorPlayer.speed * (keys["shift"] ? 1.5 : 1);
 
@@ -757,46 +828,6 @@ function render() {
   // ==========================================
   // INTERIOR RENDERING
   // ==========================================
-
-  if (isIndoors()) {
-
-    const scale = Math.min(
-      canvas.width / currentInterior.width,
-      canvas.height / currentInterior.height
-    );
-
-    const offsetX =
-      (canvas.width - currentInterior.width * scale) / 2;
-
-    const offsetY =
-      (canvas.height - currentInterior.height * scale) / 2;
-
-    ctx.save();
-
-    ctx.translate(offsetX, offsetY);
-    ctx.scale(scale, scale);
-
-    ctx.drawImage(interiorCanvas, 0, 0);
-
-    drawCharacter(interiorPlayer, true);
-
-    ctx.restore();
-
-    ctx.fillStyle = "rgba(0,0,0,0.75)";
-    ctx.fillRect(15, 85, 300, 38);
-
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 15px Arial";
-    ctx.textAlign = "left";
-
-    ctx.fillText(
-      "WASD: Move | E: Exit",
-      27,
-      109
-    );
-
-    return;
-  }
   
 // Draw the zoomed-in portion of the island.
 
@@ -821,6 +852,20 @@ ctx.save();
 
 ctx.scale(camera.zoom, camera.zoom);
 ctx.translate(-camera.x, -camera.y);
+
+// ==========================================
+// SEAMLESS BUILDING INTERIOR
+// ==========================================
+
+if (isIndoors()) {
+  ctx.drawImage(
+    interiorCanvas,
+    currentBuilding.x,
+    currentBuilding.y,
+    currentBuilding.w,
+    currentBuilding.h
+  );
+}
 
 // Draw ground loot and supply chests
 drawLoot(ctx);
