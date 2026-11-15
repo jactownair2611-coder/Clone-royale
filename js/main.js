@@ -172,12 +172,9 @@ function overlapsTree(x, y, radius) {
 // ============================================
 
 function tryEnterBuilding() {
-
   if (isIndoors()) return;
 
   for (const building of buildings) {
-
-    // Entrance is centered along the south side.
     const entranceX = building.x + building.w / 2;
     const entranceY = building.y + building.h + 25;
 
@@ -187,7 +184,6 @@ function tryEnterBuilding() {
     );
 
     if (distance < 75) {
-
       currentBuilding = building;
       currentInterior = createInterior(building);
 
@@ -198,13 +194,17 @@ function tryEnterBuilding() {
       const interiorCtx = interiorCanvas.getContext("2d");
       drawInterior(interiorCtx, currentInterior);
 
-   interiorPlayer = {
-  x: currentInterior.width / 2,
-  y: currentInterior.height - 65,
-  radius: 15,
-  speed: 190,
-  color: "#35a9ff"
-};
+      interiorPlayer = {
+        x: currentInterior.width / 2,
+        y: currentInterior.height - 65,
+        radius: 15,
+        speed: 190,
+        color: "#35a9ff"
+      };
+
+      // Keep the player positioned in the world.
+      player.x = building.x + interiorPlayer.x;
+      player.y = building.y + interiorPlayer.y;
 
       document.getElementById("status").textContent =
         "Inside: " + currentInterior.name + " | Press E near EXIT to leave";
@@ -212,36 +212,6 @@ function tryEnterBuilding() {
       return;
     }
   }
-
-}
-
-function tryExitBuilding() {
-
-  if (!isIndoors()) return;
-
-  const exit = currentInterior.exit;
-
-  const nearExit =
-    interiorPlayer.x + interiorPlayer.radius > exit.x &&
-    interiorPlayer.x - interiorPlayer.radius < exit.x + exit.w &&
-    Math.abs(interiorPlayer.y - exit.y) < 45;
-
-  if (!nearExit) return;
-
-  // Return outside, just south of the building.
-  player.x = currentBuilding.x + currentBuilding.w / 2;
-  player.y = currentBuilding.y + currentBuilding.h + 35;
-
-  currentBuilding = null;
-  currentInterior = null;
-  interiorCanvas = null;
-  interiorPlayer = null;
-
-  updateCamera();
-
-  document.getElementById("status").textContent =
-    "Version 0.2.1 | Back outside | 49 AI bots deployed";
-
 }
 // ============================================
 // PLAYER
