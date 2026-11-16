@@ -534,39 +534,6 @@ function updateInteriorPlayer(dt) {
   player.x = currentBuilding.x + interiorPlayer.x;
   player.y = currentBuilding.y + interiorPlayer.y;
 }
-function updateInteriorPlayer(dt) {
-  let dx = 0;
-  let dy = 0;
-
-  if (keys["w"]) dy--;
-  if (keys["s"]) dy++;
-  if (keys["a"]) dx--;
-  if (keys["d"]) dx++;
-
-  const length = Math.hypot(dx, dy);
-
-  if (length > 0) {
-    dx /= length;
-    dy /= length;
-  }
-
-  const speed = interiorPlayer.speed * (keys["shift"] ? 1.5 : 1);
-
-  const nextX = interiorPlayer.x + dx * speed * dt;
-  const nextY = interiorPlayer.y + dy * speed * dt;
-
-  if (!interiorBlocked(nextX, interiorPlayer.y)) {
-    interiorPlayer.x = nextX;
-  }
-
-  if (!interiorBlocked(interiorPlayer.x, nextY)) {
-    interiorPlayer.y = nextY;
-  }
-
-  player.x = currentBuilding.x + interiorPlayer.x;
-  player.y = currentBuilding.y + interiorPlayer.y;
-}
-
   const speed = interiorPlayer.speed * (keys["shift"] ? 1.5 : 1);
 
   const nextX = interiorPlayer.x + dx * speed * dt;
