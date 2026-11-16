@@ -546,8 +546,6 @@ function updateInteriorPlayer(dt) {
   if (!interiorBlocked(interiorPlayer.x, nextY)) {
     interiorPlayer.y = nextY;
   }
-}
-
 
 function updatePlayer(dt) {
 
