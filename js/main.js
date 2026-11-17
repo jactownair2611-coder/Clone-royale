@@ -246,7 +246,7 @@ function tryExitBuilding() {
 const player = {
   x: 2000,
   y: 1600,
-  radius: 15,
+  radius: 5,
   speed: 230,
   color: "#35a9ff",
   health: 100
@@ -432,7 +432,7 @@ for (let i = 0; i < 49; i++) {
     x: spawn.x,
     y: spawn.y,
 
-    radius: 13,
+    radius: 5,
 
     speed: random(65, 105),
 
