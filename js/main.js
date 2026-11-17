@@ -70,6 +70,18 @@ const camera = {
 // ============================================
 
 const keys = {};
+let mouseWorldX = 2000;
+let mouseWorldY = 1600;
+
+canvas.addEventListener("mousemove", event => {
+  const rect = canvas.getBoundingClientRect();
+
+  const screenX = event.clientX - rect.left;
+  const screenY = event.clientY - rect.top;
+
+  mouseWorldX = camera.x + screenX / camera.zoom;
+  mouseWorldY = camera.y + screenY / camera.zoom;
+});
 
 window.addEventListener("keydown", event => {
   const key = event.key.toLowerCase();
@@ -246,10 +258,11 @@ function tryExitBuilding() {
 const player = {
   x: 2000,
   y: 1600,
-  radius: 10,
+  radius: 9,
   speed: 230,
   color: "#35a9ff",
-  health: 100
+  health: 100,
+  aimAngle: 0
 };
 // ============================================
 // PLAYER INVENTORY - VERSION 0.3.1
@@ -424,7 +437,6 @@ for (let i = 0; i < 49; i++) {
   const spawn = findBotSpawn();
 
   bots.push({
-
     id: i + 1,
 
     name: botNames[i % botNames.length] + "_" + (i + 1),
@@ -447,6 +459,8 @@ for (let i = 0; i < 49; i++) {
     team: 0,
 
     state: "Wandering"
+
+    aimAngle: 0,
 
   });
 
@@ -535,7 +549,10 @@ function updateInteriorPlayer(dt) {
   player.y = currentBuilding.y + interiorPlayer.y;
 }
 function updatePlayer(dt) {
-
+player.aimAngle = Math.atan2(
+  mouseWorldY - player.y,
+  mouseWorldX - player.x
+);
   // INTERIOR MOVEMENT
   // When indoors, update the interior character instead.
   if (isIndoors()) {
@@ -591,7 +608,43 @@ function updateBots(dt) {
   for (const bot of bots) {
 
     if (!bot.alive) continue;
+// Find a nearby target to aim at.
+let target = null;
+let closestDistance = 550;
 
+const playerDistance = Math.hypot(
+  player.x - bot.x,
+  player.y - bot.y
+);
+
+if (playerDistance < closestDistance) {
+  closestDistance = playerDistance;
+  target = player;
+}
+
+// Otherwise, look for the nearest other living bot.
+for (const other of bots) {
+  if (other === bot || !other.alive) continue;
+
+  const distance = Math.hypot(
+    other.x - bot.x,
+    other.y - bot.y
+  );
+
+  if (distance < closestDistance) {
+    closestDistance = distance;
+    target = other;
+  }
+}
+
+if (target) {
+  bot.aimAngle = Math.atan2(
+    target.y - bot.y,
+    target.x - bot.x
+  );
+} else {
+  bot.aimAngle = bot.direction;
+}
     bot.timer -= dt;
 
     if (bot.timer <= 0) {
@@ -658,14 +711,21 @@ function updateCamera() {
 // ============================================
 
 
+
 function drawCharacter(character, isPlayer = false) {
   const x = character.x;
   const y = character.y;
   const r = character.radius;
+  const angle = character.aimAngle ?? 0;
 
-  // Colors
   const outline = "#34312b";
   const bodyColor = "#ffcc7d";
+
+  // Direction vectors
+  const forwardX = Math.cos(angle);
+  const forwardY = Math.sin(angle);
+  const sideX = -forwardY;
+  const sideY = forwardX;
 
   ctx.save();
   ctx.lineCap = "round";
@@ -677,39 +737,41 @@ function drawCharacter(character, isPlayer = false) {
   ctx.ellipse(x + 3, y + 5, r * 1.15, r * 1.1, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Small side appendage
-  ctx.fillStyle = bodyColor;
-  ctx.strokeStyle = outline;
-  ctx.lineWidth = Math.max(2, r * 0.2);
+  // Arms and hands follow aiming direction
+  for (const side of [-1, 1]) {
+    const shoulderX = x + forwardX * r * 0.35 + sideX * r * 0.48;
+    const shoulderY = y + forwardY * r * 0.35 + sideY * r * 0.48;
 
-  ctx.beginPath();
-  ctx.ellipse(
-    x - r * 0.85,
-    y + r * 0.12,
-    r * 0.43,
-    r * 0.48,
-    -0.15,
-    0,
-    Math.PI * 2
-  );
-  ctx.fill();
-  ctx.stroke();
+    const handX = x + forwardX * r * 1.35 + sideX * r * 0.48;
+    const handY = y + forwardY * r * 1.35 + sideY * r * 0.48;
 
-  // Small bottom appendage
-  ctx.beginPath();
-  ctx.ellipse(
-    x,
-    y + r * 0.88,
-    r * 0.43,
-    r * 0.38,
-    0,
-    0,
-    Math.PI * 2
-  );
-  ctx.fill();
-  ctx.stroke();
+    ctx.strokeStyle = outline;
+    ctx.lineWidth = r * 0.42;
 
-  // Main rounded character
+    ctx.beginPath();
+    ctx.moveTo(shoulderX, shoulderY);
+    ctx.lineTo(handX, handY);
+    ctx.stroke();
+
+    ctx.strokeStyle = bodyColor;
+    ctx.lineWidth = r * 0.25;
+
+    ctx.beginPath();
+    ctx.moveTo(shoulderX, shoulderY);
+    ctx.lineTo(handX, handY);
+    ctx.stroke();
+
+    ctx.fillStyle = bodyColor;
+    ctx.strokeStyle = outline;
+    ctx.lineWidth = Math.max(1.5, r * 0.15);
+
+    ctx.beginPath();
+    ctx.arc(handX, handY, r * 0.32, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  // Main character body
   ctx.fillStyle = bodyColor;
   ctx.strokeStyle = outline;
   ctx.lineWidth = Math.max(3, r * 0.22);
