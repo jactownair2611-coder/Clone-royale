@@ -657,74 +657,78 @@ function updateCamera() {
 // DRAW CHARACTERS
 // ============================================
 
+
 function drawCharacter(character, isPlayer = false) {
+  const x = character.x;
+  const y = character.y;
   const r = character.radius;
 
-  // Character shadow
-  ctx.fillStyle = "rgba(0,0,0,0.25)";
+  // Colors
+  const outline = "#34312b";
+  const bodyColor = "#ffcc7d";
+
+  ctx.save();
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+
+  // Ground shadow
+  ctx.fillStyle = "rgba(0,0,0,0.22)";
+  ctx.beginPath();
+  ctx.ellipse(x + 3, y + 5, r * 1.15, r * 1.1, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Small side appendage
+  ctx.fillStyle = bodyColor;
+  ctx.strokeStyle = outline;
+  ctx.lineWidth = Math.max(2, r * 0.2);
+
   ctx.beginPath();
   ctx.ellipse(
-    character.x + 2,
-    character.y + 5,
-    r * 1.2,
-    r * 0.75,
-    0,
+    x - r * 0.85,
+    y + r * 0.12,
+    r * 0.43,
+    r * 0.48,
+    -0.15,
     0,
     Math.PI * 2
   );
   ctx.fill();
-
-  // Character body
-  ctx.fillStyle = character.color;
-  ctx.beginPath();
-  ctx.arc(character.x, character.y, r, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.strokeStyle = isPlayer ? "#ffffff" : "#752d2d";
-  ctx.lineWidth = 1.5;
   ctx.stroke();
 
-  // Arms
-  ctx.strokeStyle = isPlayer ? "#d9eaff" : "#e9a18d";
-  ctx.lineWidth = Math.max(2, r * 0.42);
-  ctx.lineCap = "round";
-
+  // Small bottom appendage
   ctx.beginPath();
-  ctx.moveTo(character.x - r * 0.55, character.y);
-  ctx.lineTo(character.x - r * 1.15, character.y + r * 0.65);
-  ctx.moveTo(character.x + r * 0.55, character.y);
-  ctx.lineTo(character.x + r * 1.15, character.y + r * 0.65);
-  ctx.stroke();
-
-  // Hands
-  ctx.fillStyle = isPlayer ? "#f0c8aa" : "#d9a18b";
-
-  ctx.beginPath();
-  ctx.arc(
-    character.x - r * 1.15,
-    character.y + r * 0.65,
-    r * 0.32,
+  ctx.ellipse(
+    x,
+    y + r * 0.88,
+    r * 0.43,
+    r * 0.38,
     0,
-    Math.PI * 2
-  );
-  ctx.arc(
-    character.x + r * 1.15,
-    character.y + r * 0.65,
-    r * 0.32,
     0,
     Math.PI * 2
   );
   ctx.fill();
+  ctx.stroke();
+
+  // Main rounded character
+  ctx.fillStyle = bodyColor;
+  ctx.strokeStyle = outline;
+  ctx.lineWidth = Math.max(3, r * 0.22);
+
+  ctx.beginPath();
+  ctx.arc(x, y, r * 1.05, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
 
   // Player label
   if (isPlayer) {
     ctx.fillStyle = "#ffffff";
     ctx.font = "bold 12px Arial";
     ctx.textAlign = "center";
-    ctx.fillText("YOU", character.x, character.y - r - 12);
+    ctx.fillText("YOU", x, y - r * 1.65);
   }
-}
 
+  ctx.restore();
+}
 
 // ============================================
 // DRAW MINIMAP
