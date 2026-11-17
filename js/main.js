@@ -658,57 +658,73 @@ function updateCamera() {
 // ============================================
 
 function drawCharacter(character, isPlayer = false) {
+  const r = character.radius;
 
-  ctx.fillStyle = "rgba(0,0,0,0.3)";
-
+  // Character shadow
+  ctx.fillStyle = "rgba(0,0,0,0.25)";
   ctx.beginPath();
-
   ctx.ellipse(
-    character.x + 3,
-    character.y + 7,
-    character.radius,
-    character.radius * 0.7,
+    character.x + 2,
+    character.y + 5,
+    r * 1.2,
+    r * 0.75,
     0,
     0,
     Math.PI * 2
   );
-
   ctx.fill();
 
+  // Character body
   ctx.fillStyle = character.color;
-
   ctx.beginPath();
-
-  ctx.arc(
-    character.x,
-    character.y,
-    character.radius,
-    0,
-    Math.PI * 2
-  );
-
+  ctx.arc(character.x, character.y, r, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.strokeStyle = isPlayer ? "#ffffff" : "#752d2d";
-  ctx.lineWidth = isPlayer ? 3 : 2;
-
+  ctx.lineWidth = 1.5;
   ctx.stroke();
 
-  if (isPlayer) {
+  // Arms
+  ctx.strokeStyle = isPlayer ? "#d9eaff" : "#e9a18d";
+  ctx.lineWidth = Math.max(2, r * 0.42);
+  ctx.lineCap = "round";
 
+  ctx.beginPath();
+  ctx.moveTo(character.x - r * 0.55, character.y);
+  ctx.lineTo(character.x - r * 1.15, character.y + r * 0.65);
+  ctx.moveTo(character.x + r * 0.55, character.y);
+  ctx.lineTo(character.x + r * 1.15, character.y + r * 0.65);
+  ctx.stroke();
+
+  // Hands
+  ctx.fillStyle = isPlayer ? "#f0c8aa" : "#d9a18b";
+
+  ctx.beginPath();
+  ctx.arc(
+    character.x - r * 1.15,
+    character.y + r * 0.65,
+    r * 0.32,
+    0,
+    Math.PI * 2
+  );
+  ctx.arc(
+    character.x + r * 1.15,
+    character.y + r * 0.65,
+    r * 0.32,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+
+  // Player label
+  if (isPlayer) {
     ctx.fillStyle = "#ffffff";
     ctx.font = "bold 12px Arial";
     ctx.textAlign = "center";
-
-    ctx.fillText(
-      "YOU",
-      character.x,
-      character.y - 23
-    );
-
+    ctx.fillText("YOU", character.x, character.y - r - 12);
   }
-
 }
+
 
 // ============================================
 // DRAW MINIMAP
