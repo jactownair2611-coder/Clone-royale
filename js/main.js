@@ -534,19 +534,6 @@ function updateInteriorPlayer(dt) {
   player.x = currentBuilding.x + interiorPlayer.x;
   player.y = currentBuilding.y + interiorPlayer.y;
 }
-  const speed = interiorPlayer.speed * (keys["shift"] ? 1.5 : 1);
-
-  const nextX = interiorPlayer.x + dx * speed * dt;
-  const nextY = interiorPlayer.y + dy * speed * dt;
-
-  if (!interiorBlocked(nextX, interiorPlayer.y)) {
-    interiorPlayer.x = nextX;
-  }
-
-  if (!interiorBlocked(interiorPlayer.x, nextY)) {
-    interiorPlayer.y = nextY;
-  }
-
 function updatePlayer(dt) {
 
   // INTERIOR MOVEMENT
