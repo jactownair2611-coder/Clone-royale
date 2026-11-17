@@ -458,7 +458,7 @@ for (let i = 0; i < 49; i++) {
 
     team: 0,
 
-    state: "Wandering"
+    state: "Wandering",
 
     aimAngle: 0,
 
