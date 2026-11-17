@@ -197,7 +197,7 @@ function tryEnterBuilding() {
       interiorPlayer = {
         x: currentInterior.width / 2,
         y: currentInterior.height - 65,
-        radius: 15,
+        radius: 5,
         speed: 190,
         color: "#35a9ff"
       };
