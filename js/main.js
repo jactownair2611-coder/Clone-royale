@@ -285,54 +285,40 @@ const inventory = {
 // INVENTORY ITEM MANAGEMENT
 // ============================================
 
+
 function addInventoryItem(item) {
 
-  // Ammunition is automatically collected.
+  // Automatically collect ammunition.
   if (item.type === "ammo") {
     inventory.ammo[item.name] =
       (inventory.ammo[item.name] || 0) + item.amount;
-
     return true;
   }
 
-  // Stack medkits.
-  if (item.type === "medkit") {
+  // Stack medkits and shields.
+  if (item.type === "medkit" || item.type === "shield") {
     const existing = inventory.slots.find(
-      slot => slot && slot.type === "medkit"
+      slot => slot && slot.type === item.type
     );
 
     if (existing) {
-      existing.amount++;
+      existing.count = (existing.count || 1) + 1;
       return true;
     }
   }
 
-  // Stack shields.
-  if (item.type === "shield") {
-    const existing = inventory.slots.find(
-      slot => slot && slot.type === "shield"
-    );
-
-    if (existing) {
-      existing.amount++;
-      return true;
-    }
-  }
-
-  // Find the first empty slot.
+  // Find an empty slot.
   const emptySlot = inventory.slots.findIndex(
     slot => slot === null
   );
 
-  if (emptySlot === -1) {
-    return false;
-  }
+  if (emptySlot === -1) return false;
 
   inventory.slots[emptySlot] = {
     ...item,
-    amount: item.type === "medkit" || item.type === "shield"
-      ? 1
-      : item.amount
+    ...(item.type === "medkit" || item.type === "shield"
+      ? { count: 1 }
+      : {})
   };
 
   return true;
@@ -473,7 +459,7 @@ function drawInventoryHUD() {
       );
 
       // Item quantity.
-      if (item.amount > 1) {
+      if (item.count > 1) {
         ctx.fillStyle = "#ffffff";
         ctx.font = "bold 11px Arial";
         ctx.textAlign = "right";
@@ -585,13 +571,11 @@ alive: true,
 health: 100,
 
 team: 0,
-    inventory: {
-  weapons: [],
-  ammo: 0,
-  medkits: 0,
-  shields: 0
+  inventory: {
+  slots: [null, null, null, null, null],
+  selectedSlot: 0,
+  ammo: {}
 },
-
 idleAction: "none",
 idleTimer: random(3, 8),
 lookAngle: 0,
@@ -842,51 +826,97 @@ function findBotLootTarget(bot) {
 
   return closestItem;
 }
+
+function addBotInventoryItem(bot, item) {
+
+  // Automatically collect ammunition.
+  if (item.type === "ammo") {
+    bot.inventory.ammo[item.name] =
+      (bot.inventory.ammo[item.name] || 0) + item.amount;
+
+    return true;
+  }
+
+  // Stack medkits and shields.
+  if (item.type === "medkit" || item.type === "shield") {
+    const existing = bot.inventory.slots.find(
+      slot => slot && slot.type === item.type
+    );
+
+    if (existing) {
+      existing.count = (existing.count || 1) + 1;
+      return true;
+    }
+  }
+
+  // Find an empty slot.
+  const emptySlot = bot.inventory.slots.findIndex(
+    slot => slot === null
+  );
+
+  if (emptySlot === -1) return false;
+
+  bot.inventory.slots[emptySlot] = {
+    ...item,
+    ...(item.type === "medkit" || item.type === "shield"
+      ? { count: 1 }
+      : {})
+  };
+
+  return true;
+}
+
+// Automatically choose a useful inventory slot.
+function chooseBotInventorySlot(bot) {
+
+  const slots = bot.inventory.slots;
+
+  // Prefer a weapon slot.
+  let index = slots.findIndex(
+    item => item && item.type === "weapon"
+  );
+
+  // Prefer a medkit when health is low.
+  if (bot.health < 65) {
+    const medkitIndex = slots.findIndex(
+      item => item && item.type === "medkit"
+    );
+
+    if (medkitIndex !== -1) {
+      index = medkitIndex;
+    }
+  }
+
+  if (index !== -1) {
+    bot.inventory.selectedSlot = index;
+  }
+}
+
+// Collect loot, including rewards from supply chests.
 function collectBotLoot(bot, item) {
+
   if (!item) return;
 
   if (item.type === "chest") {
+
     const rewards = openChest(item);
 
     for (const reward of rewards) {
-      if (reward.type === "ammo") {
-        bot.inventory.ammo += reward.amount;
-      }
-
-      if (reward.type === "medkit") {
-        bot.inventory.medkits++;
-      }
-
-      if (reward.type === "shield") {
-        bot.inventory.shields++;
-      }
-
-      if (reward.type === "weapon") {
-        bot.inventory.weapons.push(reward.name);
+      if (addBotInventoryItem(bot, reward)) {
+        removeLoot(reward.id);
       }
     }
 
+    chooseBotInventorySlot(bot);
     return;
   }
 
-  if (item.type === "weapon") {
-    bot.inventory.weapons.push(item.name);
+  if (addBotInventoryItem(bot, item)) {
+    removeLoot(item.id);
+    chooseBotInventorySlot(bot);
   }
-
-  if (item.type === "ammo") {
-    bot.inventory.ammo += item.amount;
-  }
-
-  if (item.type === "medkit") {
-    bot.inventory.medkits++;
-  }
-
-  if (item.type === "shield") {
-    bot.inventory.shields++;
-  }
-
-  removeLoot(item.id);
 }
+
   // ============================================
 // AI LOOT PATHFINDING - VERSION 0.5.8
 // ============================================
@@ -1049,20 +1079,29 @@ function updateBotIdle(bot, dt) {
   }
 
   if (bot.idleAction === "inspect") {
-    if (bot.inventory.weapons.length > 0) {
-      bot.selectedWeapon = Math.floor(
-        Math.random() * bot.inventory.weapons.length
-      );
-    }
+    chooseBotInventorySlot(bot);
   }
 
   if (bot.idleAction === "heal") {
     if (
-      bot.inventory.medkits > 0 &&
+     bot.inventory.slots.some(
+  item => item && item.type === "medkit"
+)
       bot.health < 100
     ) {
       bot.health = Math.min(100, bot.health + 35);
-      bot.inventory.medkits--;
+     const medkit = bot.inventory.slots.find(
+  item => item && item.type === "medkit"
+);
+
+if (medkit) {
+  medkit.count--;
+
+  if (medkit.count <= 0) {
+    const index = bot.inventory.slots.indexOf(medkit);
+    bot.inventory.slots[index] = null;
+  }
+}
     }
   }
 
