@@ -16,6 +16,7 @@ import {
   drawInterior
 } from "./interiors.js";
 import {
+  lootItems,
   generateLoot,
   drawLoot,
   findNearbyLoot,
@@ -463,6 +464,14 @@ for (let i = 0; i < 49; i++) {
     team: 0,
 
     state: "Wandering",
+    inventory: {
+  weapons: [],
+  ammo: 0,
+  medkits: 0,
+  shields: 0
+},
+
+lootTarget: null,
 
     aimAngle: 0,
 
@@ -674,6 +683,80 @@ function getBotAvoidance(bot) {
   return { x: avoidX, y: avoidY };
 }
 // ============================================
+// AI LOOT DETECTION - VERSION 0.5.5
+// ============================================
+
+function findBotLootTarget(bot) {
+  let closestItem = null;
+  let closestDistance = 450;
+
+  for (const item of lootItems) {
+    if (
+      item.reservedBy !== undefined &&
+      item.reservedBy !== bot.id
+    ) {
+      continue;
+    }
+
+    const distance = Math.hypot(
+      item.x - bot.x,
+      item.y - bot.y
+    );
+
+    if (distance < closestDistance) {
+      closestDistance = distance;
+      closestItem = item;
+    }
+  }
+
+  return closestItem;
+}
+function collectBotLoot(bot, item) {
+  if (!item) return;
+
+  if (item.type === "chest") {
+    const rewards = openChest(item);
+
+    for (const reward of rewards) {
+      if (reward.type === "ammo") {
+        bot.inventory.ammo += reward.amount;
+      }
+
+      if (reward.type === "medkit") {
+        bot.inventory.medkits++;
+      }
+
+      if (reward.type === "shield") {
+        bot.inventory.shields++;
+      }
+
+      if (reward.type === "weapon") {
+        bot.inventory.weapons.push(reward.name);
+      }
+    }
+
+    return;
+  }
+
+  if (item.type === "weapon") {
+    bot.inventory.weapons.push(item.name);
+  }
+
+  if (item.type === "ammo") {
+    bot.inventory.ammo += item.amount;
+  }
+
+  if (item.type === "medkit") {
+    bot.inventory.medkits++;
+  }
+
+  if (item.type === "shield") {
+    bot.inventory.shields++;
+  }
+
+  removeLoot(item.id);
+}
+// ============================================
 // 360 DEGREE BOT NAVIGATION
 // VERSION 0.5.1
 // ============================================
@@ -736,52 +819,91 @@ function updateBots(dt) {
   for (const bot of bots) {
     if (!bot.alive) continue;
 
-    bot.timer -= dt;
-
-    const probeX =
-      bot.x + Math.cos(bot.direction) * 45;
-
-    const probeY =
-      bot.y + Math.sin(bot.direction) * 45;
-
+    // Release invalid loot targets.
     if (
-      bot.timer <= 0 ||
-      botPositionBlocked(probeX, probeY, bot)
+      bot.lootTarget &&
+      !lootItems.includes(bot.lootTarget)
     ) {
-      bot.direction = chooseBotDirection(bot);
-      bot.timer = random(1.5, 3.5);
+      if (bot.lootTarget.reservedBy === bot.id) {
+        delete bot.lootTarget.reservedBy;
+      }
+
+      bot.lootTarget = null;
     }
 
-    // Combine forward movement with obstacle avoidance.
+    // Look for loot when not already searching.
+    if (!bot.lootTarget) {
+      bot.lootTarget = findBotLootTarget(bot);
+
+      if (bot.lootTarget) {
+        bot.lootTarget.reservedBy = bot.id;
+        bot.state = "Searching for loot";
+      }
+    }
+
+    let desiredDirection = bot.direction;
+
+    // Move toward the selected loot.
+    if (bot.lootTarget) {
+      const dx = bot.lootTarget.x - bot.x;
+      const dy = bot.lootTarget.y - bot.y;
+      const distance = Math.hypot(dx, dy);
+
+      if (distance < bot.radius + bot.lootTarget.radius + 8) {
+        const item = bot.lootTarget;
+
+        delete item.reservedBy;
+        bot.lootTarget = null;
+
+        collectBotLoot(bot, item);
+        bot.state = "Wandering";
+      } else {
+        desiredDirection = Math.atan2(dy, dx);
+      }
+    }
+
+    // Wander when there is no loot target.
+    if (!bot.lootTarget) {
+      bot.timer -= dt;
+
+      if (bot.timer <= 0) {
+        bot.direction = chooseBotDirection(bot);
+        bot.timer = random(2, 4);
+      }
+
+      desiredDirection = bot.direction;
+    }
+
+    // Blend movement with obstacle avoidance.
     const avoidance = getBotAvoidance(bot);
 
     let moveX =
-      Math.cos(bot.direction) + avoidance.x * 2.5;
+      Math.cos(desiredDirection) + avoidance.x * 2.5;
 
     let moveY =
-      Math.sin(bot.direction) + avoidance.y * 2.5;
+      Math.sin(desiredDirection) + avoidance.y * 2.5;
 
-    const moveLength = Math.hypot(moveX, moveY);
+    const length = Math.hypot(moveX, moveY);
 
-    if (moveLength > 0) {
-      moveX /= moveLength;
-      moveY /= moveLength;
+    if (length > 0) {
+      moveX /= length;
+      moveY /= length;
     }
 
-    const targetX = bot.x + moveX * bot.speed * dt;
-    const targetY = bot.y + moveY * bot.speed * dt;
+    const nextX = bot.x + moveX * bot.speed * dt;
+    const nextY = bot.y + moveY * bot.speed * dt;
 
-    if (!botPositionBlocked(targetX, bot.y, bot)) {
-      bot.x = targetX;
+    if (!botPositionBlocked(nextX, bot.y, bot)) {
+      bot.x = nextX;
     }
 
-    if (!botPositionBlocked(bot.x, targetY, bot)) {
-      bot.y = targetY;
+    if (!botPositionBlocked(bot.x, nextY, bot)) {
+      bot.y = nextY;
     }
 
     bot.direction = Math.atan2(moveY, moveX);
 
-    // Keep the existing character-facing behavior.
+    // Keep character-facing behavior.
     let target = null;
     let closestDistance = 550;
 
