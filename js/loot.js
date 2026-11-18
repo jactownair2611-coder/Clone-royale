@@ -4,6 +4,8 @@
 // LOOT ENGINE - VERSION 0.3.1
 // ============================================
 
+import { isClearLootLocation } from "./world.js";
+
 export const lootItems = [];
 
 let nextLootId = 1;
@@ -173,6 +175,21 @@ function choose(array) {
   return array[Math.floor(Math.random() * array.length)];
 }
 
+function findClearLootLocation(world, minX = 100, maxX = world.width - 100,
+  minY = 100, maxY = world.height - 100) {
+
+  for (let attempt = 0; attempt < 80; attempt++) {
+    const x = random(minX, maxX);
+    const y = random(minY, maxY);
+
+    if (isClearLootLocation(x, y, 32)) {
+      return { x, y };
+    }
+  }
+
+  return null;
+}
+
 function chooseRarity() {
   const roll = Math.random();
 
@@ -238,18 +255,115 @@ function createItem(type, x, y, rarity = "common") {
 // LOOT GENERATION
 // ============================================
 
-
 export function generateLoot(buildings, world) {
-
   lootItems.length = 0;
   nextLootId = 1;
 
-  const availableBuildings = buildings.filter(building =>
-    building.x > 50 &&
-    building.y > 50 &&
-    building.x + building.w < world.width - 50 &&
-    building.y + building.h < world.height - 50
+  let failedSpawns = 0;
+
+  // ========================================
+  // BUILDING-AREA LOOT
+  // ========================================
+
+  for (let i = 0; i < buildings.length; i++) {
+    const building = buildings[i];
+
+    const itemCount = Math.floor(random(3, 7));
+    let weaponSpawned = false;
+
+    for (let j = 0; j < itemCount; j++) {
+      // Try to find clear ground around this building.
+      const location = findClearLootLocation(
+        world,
+        building.x - 130,
+        building.x + building.w + 130,
+        building.y - 130,
+        building.y + building.h + 130
+      );
+
+      if (!location) {
+        failedSpawns++;
+        continue;
+      }
+
+      let type;
+
+      if (!weaponSpawned) {
+        type = "weapon";
+        weaponSpawned = true;
+      } else {
+        const roll = Math.random();
+
+        if (roll < 0.30) type = "weapon";
+        else if (roll < 0.65) type = "ammo";
+        else if (roll < 0.83) type = "medkit";
+        else type = "shield";
+      }
+
+      lootItems.push(
+        createItem(type, location.x, location.y, chooseRarity())
+      );
+    }
+
+    // Chests now spawn only on validated clear ground.
+    if (i % 7 === 0 && Math.random() < 0.65) {
+      const location = findClearLootLocation(
+        world,
+        building.x - 180,
+        building.x + building.w + 180,
+        building.y - 180,
+        building.y + building.h + 180
+      );
+
+      if (location) {
+        lootItems.push(
+          createItem("chest", location.x, location.y)
+        );
+      } else {
+        failedSpawns++;
+      }
+    }
+  }
+
+  // ========================================
+  // EXTRA ISLAND LOOT
+  // ========================================
+
+  for (let i = 0; i < 100; i++) {
+    const location = findClearLootLocation(world);
+
+    if (!location) {
+      failedSpawns++;
+      continue;
+    }
+
+    const roll = Math.random();
+
+    let type;
+
+    if (roll < 0.40) type = "weapon";
+    else if (roll < 0.70) type = "ammo";
+    else if (roll < 0.85) type = "medkit";
+    else type = "shield";
+
+    lootItems.push(
+      createItem(type, location.x, location.y, chooseRarity())
+    );
+  }
+
+  console.log("ULTIMATE ROYALE LOOT SYSTEM");
+  console.log("Total loot:", lootItems.length);
+  console.log(
+    "Weapons:",
+    lootItems.filter(item => item.type === "weapon").length
   );
+  console.log(
+    "Chests:",
+    lootItems.filter(item => item.type === "chest").length
+  );
+  console.log("Failed placements:", failedSpawns);
+}
+
 
   // ========================================
   // BUILDING LOOT
