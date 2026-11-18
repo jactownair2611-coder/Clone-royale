@@ -482,7 +482,7 @@ targetAimAngle: 0,
 lookDirection: 1,
 lookTimer: random(1, 3),
 
-)}
+})
 
 // ============================================
 // INTERIOR COLLISION
