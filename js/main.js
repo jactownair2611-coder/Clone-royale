@@ -621,15 +621,19 @@ function getBotAvoidance(bot) {
   let avoidX = 0;
   let avoidY = 0;
 
-  // Avoid trees.
+  // Avoid trees using their full visible canopy radius.
   for (const tree of trees) {
     const dx = bot.x - tree.x;
     const dy = bot.y - tree.y;
-    const distance = Math.hypot(dx, dy);
 
-    const safeDistance = bot.radius + tree.radius * 0.75 + 35;
+    const safeDistance = bot.radius + tree.radius + 35;
+    const distanceSquared = dx * dx + dy * dy;
 
-    if (distance < safeDistance && distance > 0) {
+    if (
+      distanceSquared < safeDistance * safeDistance &&
+      distanceSquared > 0
+    ) {
+      const distance = Math.sqrt(distanceSquared);
       const strength = (safeDistance - distance) / safeDistance;
 
       avoidX += (dx / distance) * strength;
@@ -637,7 +641,7 @@ function getBotAvoidance(bot) {
     }
   }
 
-  // Avoid buildings.
+  // Avoid building edges.
   for (const building of buildings) {
     const closestX = Math.max(
       building.x,
@@ -651,11 +655,15 @@ function getBotAvoidance(bot) {
 
     const dx = bot.x - closestX;
     const dy = bot.y - closestY;
-    const distance = Math.hypot(dx, dy);
 
     const safeDistance = bot.radius + 35;
+    const distanceSquared = dx * dx + dy * dy;
 
-    if (distance < safeDistance && distance > 0) {
+    if (
+      distanceSquared < safeDistance * safeDistance &&
+      distanceSquared > 0
+    ) {
+      const distance = Math.sqrt(distanceSquared);
       const strength = (safeDistance - distance) / safeDistance;
 
       avoidX += (dx / distance) * strength;
@@ -725,89 +733,85 @@ function chooseBotDirection(bot) {
 // ============================================
 
 function updateBots(dt) {
-
   for (const bot of bots) {
-
     if (!bot.alive) continue;
 
     bot.timer -= dt;
 
-    const nextX =
-      bot.x + Math.cos(bot.direction) * bot.speed * dt;
+    const probeX =
+      bot.x + Math.cos(bot.direction) * 45;
 
-    const nextY =
-      bot.y + Math.sin(bot.direction) * bot.speed * dt;
+    const probeY =
+      bot.y + Math.sin(bot.direction) * 45;
 
-    // Check whether the current direction is safe.
-    const blocked = botPositionBlocked(
-      nextX,
-      nextY,
-      bot
-    );
-
-    // Pick a smarter direction when necessary.
-    if (blocked || bot.timer <= 0) {
-
+    if (
+      bot.timer <= 0 ||
+      botPositionBlocked(probeX, probeY, bot)
+    ) {
       bot.direction = chooseBotDirection(bot);
-
       bot.timer = random(1.5, 3.5);
     }
 
-    // Move using the newly selected direction.
-    const moveX =
-      bot.x + Math.cos(bot.direction) * bot.speed * dt;
+    // Combine forward movement with obstacle avoidance.
+    const avoidance = getBotAvoidance(bot);
 
-    const moveY =
-      bot.y + Math.sin(bot.direction) * bot.speed * dt;
+    let moveX =
+      Math.cos(bot.direction) + avoidance.x * 2.5;
 
-    if (!botPositionBlocked(moveX, moveY, bot)) {
+    let moveY =
+      Math.sin(bot.direction) + avoidance.y * 2.5;
 
-      bot.x = moveX;
-      bot.y = moveY;
+    const moveLength = Math.hypot(moveX, moveY);
 
-    } else {
-
-      // Try another direction if the path becomes blocked.
-      bot.direction = chooseBotDirection(bot);
-      bot.timer = 0.5;
-
+    if (moveLength > 0) {
+      moveX /= moveLength;
+      moveY /= moveLength;
     }
-   // Find the nearest character to face.
-let target = null;
-let closestDistance = 550;
 
-const playerDistance = Math.hypot(
-  player.x - bot.x,
-  player.y - bot.y
-);
+    const targetX = bot.x + moveX * bot.speed * dt;
+    const targetY = bot.y + moveY * bot.speed * dt;
 
-if (playerDistance < closestDistance) {
-  closestDistance = playerDistance;
-  target = player;
-}
+    if (!botPositionBlocked(targetX, bot.y, bot)) {
+      bot.x = targetX;
+    }
 
-for (const other of bots) {
-  if (other === bot || !other.alive) continue;
+    if (!botPositionBlocked(bot.x, targetY, bot)) {
+      bot.y = targetY;
+    }
 
-  const distance = Math.hypot(
-    other.x - bot.x,
-    other.y - bot.y
-  );
+    bot.direction = Math.atan2(moveY, moveX);
 
-  if (distance < closestDistance) {
-    closestDistance = distance;
-    target = other;
-  }
-}
+    // Keep the existing character-facing behavior.
+    let target = null;
+    let closestDistance = 550;
 
-if (target) {
-  bot.aimAngle = Math.atan2(
-    target.y - bot.y,
-    target.x - bot.x
-  );
-} else {
-  bot.aimAngle = bot.direction;
-}
+    const playerDistance = Math.hypot(
+      player.x - bot.x,
+      player.y - bot.y
+    );
+
+    if (playerDistance < closestDistance) {
+      closestDistance = playerDistance;
+      target = player;
+    }
+
+    for (const other of bots) {
+      if (other === bot || !other.alive) continue;
+
+      const distance = Math.hypot(
+        other.x - bot.x,
+        other.y - bot.y
+      );
+
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        target = other;
+      }
+    }
+
+    bot.aimAngle = target
+      ? Math.atan2(target.y - bot.y, target.x - bot.x)
+      : bot.direction;
   }
 }
 // ============================================
