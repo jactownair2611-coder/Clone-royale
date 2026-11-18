@@ -88,7 +88,10 @@ window.addEventListener("keydown", event => {
   const key = event.key.toLowerCase();
 
   keys[key] = true;
-
+// Inventory selection: keys 1-5
+if (["1", "2", "3", "4", "5"].includes(key)) {
+  selectInventorySlot(Number(key));
+}
   if (["w", "a", "s", "d", " "].includes(key)) {
     event.preventDefault();
   }
@@ -270,64 +273,119 @@ const player = {
   aimAngle: 0
 };
 // ============================================
-// PLAYER INVENTORY - VERSION 0.3.1
+// PLAYER INVENTORY - VERSION 0.4.0
 // ============================================
 
 const inventory = {
-  weapons: [],
-  maxWeapons: 4,
-  ammo: {},
-  medkits: 0,
-  shields: 0
+  slots: [null, null, null, null, null],
+  selectedSlot: 0,
+  ammo: {}
 };
+// ============================================
+// INVENTORY ITEM MANAGEMENT
+// ============================================
 
+function addInventoryItem(item) {
+
+  // Ammunition is automatically collected.
+  if (item.type === "ammo") {
+    inventory.ammo[item.name] =
+      (inventory.ammo[item.name] || 0) + item.amount;
+
+    return true;
+  }
+
+  // Stack medkits.
+  if (item.type === "medkit") {
+    const existing = inventory.slots.find(
+      slot => slot && slot.type === "medkit"
+    );
+
+    if (existing) {
+      existing.amount++;
+      return true;
+    }
+  }
+
+  // Stack shields.
+  if (item.type === "shield") {
+    const existing = inventory.slots.find(
+      slot => slot && slot.type === "shield"
+    );
+
+    if (existing) {
+      existing.amount++;
+      return true;
+    }
+  }
+
+  // Find the first empty slot.
+  const emptySlot = inventory.slots.findIndex(
+    slot => slot === null
+  );
+
+  if (emptySlot === -1) {
+    return false;
+  }
+
+  inventory.slots[emptySlot] = {
+    ...item,
+    amount: item.type === "medkit" || item.type === "shield"
+      ? 1
+      : item.amount
+  };
+
+  return true;
+}
+
+// ============================================
+// SELECT INVENTORY SLOT
+// ============================================
+
+function selectInventorySlot(number) {
+
+  if (number < 1 || number > 5) return;
+
+  inventory.selectedSlot = number - 1;
+
+}
 // ============================================
 // LOOT INTERACTION
 // ============================================
 
 
+// ============================================
+// LOOT INTERACTION - VERSION 0.4.0
+// ============================================
+
 function interactWithLoot() {
+
   const item = findNearbyLoot(player.x, player.y, 65);
 
   if (!item) return false;
 
   // Open supply chest.
   if (item.type === "chest") {
+
     const rewards = openChest(item);
 
     document.getElementById("status").textContent =
-      "Supply chest opened! " + rewards.length + " rewards released.";
+      "Supply chest opened! " +
+      rewards.length +
+      " rewards released.";
 
     return true;
   }
 
-  // Collect weapons.
-  if (item.type === "weapon") {
-    inventory.weapons.push({
-      name: item.name,
-      category: item.category,
-      rarity: item.rarity,
-      damage: item.damage,
-      fireRate: item.fireRate,
-      magazine: item.magazine,
-      icon: item.icon
-    });
-  }
+  // Add item to inventory.
+  const collected = addInventoryItem(item);
 
-  // Collect ammunition.
-  if (item.type === "ammo") {
-    inventory.ammo[item.name] =
-      (inventory.ammo[item.name] || 0) + item.amount;
-  }
+  if (!collected) {
 
-  // Collect medkits.
-  if (item.type === "medkit") {
-    inventory.medkits++;
-  }
+    document.getElementById("status").textContent =
+      "Inventory full!";
 
-  // Collect shield potions.
-  if (item.type === "shield") {
-    inventory.shields++;
+    return true;
   }
 
   removeLoot(item.id);
@@ -342,53 +400,117 @@ function interactWithLoot() {
 // INVENTORY HUD
 // ============================================
 
+// ============================================
+// INVENTORY HUD - VERSION 0.4.0
+// ============================================
+
 function drawInventoryHUD() {
-  const x = 18;
-  const y = canvas.height - 142;
+
+  const slotSize = 58;
+  const gap = 7;
+
+  const totalWidth = slotSize * 5 + gap * 4;
+
+  const startX = canvas.width - totalWidth - 18;
+  const y = canvas.height - slotSize - 24;
 
   ctx.save();
 
-  ctx.fillStyle = "rgba(10,18,28,0.88)";
-  ctx.fillRect(x, y, 285, 124);
+  for (let i = 0; i < 5; i++) {
 
-  ctx.strokeStyle = "#8295a8";
-  ctx.lineWidth = 2;
-  ctx.strokeRect(x, y, 285, 124);
+    const x = startX + i * (slotSize + gap);
+    const item = inventory.slots[i];
 
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 15px Arial";
-  ctx.textAlign = "left";
+    // Slot background.
+    ctx.fillStyle = "rgba(15, 23, 35, 0.92)";
+    ctx.fillRect(x, y, slotSize, slotSize);
 
-  ctx.fillText("INVENTORY", x + 12, y + 21);
+    // Selected slot highlight.
+    ctx.strokeStyle =
+      inventory.selectedSlot === i
+        ? "#ffd85b"
+        : "#8190a0";
 
-  ctx.font = "13px Arial";
+    ctx.lineWidth =
+      inventory.selectedSlot === i ? 4 : 2;
 
-  ctx.fillText(
-    "Weapon 1: " + (inventory.weapons[0]?.name || "Empty"),
-    x + 12, y + 44
-  );
+    ctx.strokeRect(x, y, slotSize, slotSize);
 
-  ctx.fillText(
-    "Weapon 2: " + (inventory.weapons[1]?.name || "Empty"),
-    x + 12, y + 63
-  );
+    // Slot number.
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 12px Arial";
+    ctx.textAlign = "left";
+    ctx.fillText(String(i + 1), x + 5, y + 14);
 
-  ctx.fillText(
-    "Medkits: " + inventory.medkits +
-    "    Shields: " + inventory.shields,
-    x + 12, y + 84
-  );
+    if (item) {
 
-  const ammoTotal = Object.values(inventory.ammo)
-    .reduce((total, amount) => total + amount, 0);
+      // Item icon.
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
 
-  ctx.fillText(
-    "Total ammo: " + ammoTotal,
-    x + 12, y + 105
-  );
+      let symbol = "?";
+
+      if (item.type === "weapon") {
+        symbol = item.icon || "W";
+      }
+
+      if (item.type === "medkit") symbol = "+";
+      if (item.type === "shield") symbol = "S";
+
+      ctx.fillStyle =
+        item.type === "weapon"
+          ? "#ffffff"
+          : item.type === "medkit"
+            ? "#65e58b"
+            : "#65baff";
+
+      ctx.font = "bold 17px Arial";
+
+      ctx.fillText(
+        symbol.length > 5 ? symbol.slice(0, 4) : symbol,
+        x + slotSize / 2,
+        y + 31
+      );
+
+      // Item quantity.
+      if (item.amount > 1) {
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 11px Arial";
+        ctx.textAlign = "right";
+
+        ctx.fillText(
+          "x" + item.amount,
+          x + slotSize - 5,
+          y + slotSize - 6
+        );
+      }
+
+      // Rarity indicator.
+      const rarityColors = {
+        common: "#b8c2cc",
+        uncommon: "#45c96b",
+        rare: "#398cff",
+        epic: "#b34cff",
+        legendary: "#ffae32"
+      };
+
+      ctx.fillStyle =
+        rarityColors[item.rarity] || "#b8c2cc";
+
+      ctx.fillRect(
+        x + 4,
+        y + slotSize - 4,
+        slotSize - 8,
+        3
+      );
+
+    }
+
+  }
 
   ctx.restore();
 }
+
 // ============================================
 // BUILDING INTERIOR STATE
 // ============================================
@@ -1254,8 +1376,7 @@ function drawMinimap() {
   const size = 155;
 
   const x = canvas.width - size - 18;
-  const y = canvas.height - size - 18;
-
+  const y = 18;
   ctx.fillStyle = "rgba(12,20,25,0.9)";
   ctx.fillRect(x - 6, y - 6, size + 12, size + 12);
 
