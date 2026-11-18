@@ -274,9 +274,9 @@ function addBuilding(x, y, w, h, type, style = 0) {
 }
 
 
+
 function tryBuilding(x, y, w, h, type, gap = 45) {
 
-  // Building enlargement by type
   const scales = {
     house: 1.45,
     city: 1.30,
@@ -294,18 +294,30 @@ function tryBuilding(x, y, w, h, type, gap = 45) {
   const newW = Math.round(w * scale);
   const newH = Math.round(h * scale);
 
-  // Keep the original building center in the same location
   x -= (newW - w) / 2;
   y -= (newH - h) / 2;
 
-  // Smaller gaps allow larger buildings to fit
   gap = Math.min(gap, 12);
 
-  if (!insideIsland(x + newW / 2, y + newH / 2, 90)) {
-    return false;
-  }
+  // Check the entire building footprint against roads
+  const roadPadding = 55;
 
-  if (nearRoad(x + newW / 2, y + newH / 2, 35)) {
+  const samplePoints = [
+    [x, y],
+    [x + newW, y],
+    [x, y + newH],
+    [x + newW, y + newH],
+    [x + newW / 2, y],
+    [x + newW / 2, y + newH],
+    [x, y + newH / 2],
+    [x + newW, y + newH / 2],
+    [x + newW / 2, y + newH / 2]
+  ];
+
+  if (samplePoints.some(([px, py]) =>
+    !insideIsland(px, py, 90) ||
+    nearRoad(px, py, roadPadding)
+  )) {
     return false;
   }
 
