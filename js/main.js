@@ -661,57 +661,51 @@ function getBotAvoidance(bot) {
 
   return { x: avoidX, y: avoidY };
 }
+// ============================================
+// 360 DEGREE BOT NAVIGATION
+// VERSION 0.5.1
+// ============================================
+
 function chooseBotDirection(bot) {
+
   let bestDirection = bot.direction;
   let bestScore = -Infinity;
 
-  // Test 24 possible directions.
-  for (let i = 0; i < 24; i++) {
-    const angle = (Math.PI * 2 / 24) * i;
+  // Test every single degree.
+  for (let degree = 0; degree < 360; degree++) {
+
+    const angle = degree * Math.PI / 180;
 
     const dx = Math.cos(angle);
     const dy = Math.sin(angle);
 
     let clearance = 0;
+    let blocked = false;
 
-    // Check farther ahead to avoid walking into obstacles.
-    for (const distance of [25, 50, 80, 110, 145, 180, 220]) {
+    // Test the path ahead.
+    for (const distance of [20, 40, 60, 80, 100, 125, 150, 180]) {
+
       const testX = bot.x + dx * distance;
       const testY = bot.y + dy * distance;
 
       if (botPositionBlocked(testX, testY, bot)) {
+        blocked = true;
         break;
       }
 
       clearance++;
     }
 
-    if (clearance === 0) continue;
+    if (blocked || clearance === 0) continue;
 
     const forwardScore =
       Math.cos(angle - bot.direction) * 20;
 
     const spaceScore = clearance * 15;
 
-    let crowdPenalty = 0;
-
-    for (const other of bots) {
-      if (other === bot || !other.alive) continue;
-
-      const distance = Math.hypot(
-        other.x - (bot.x + dx * 65),
-        other.y - (bot.y + dy * 65)
-      );
-
-      if (distance < 45) {
-        crowdPenalty += (45 - distance);
-      }
-    }
-
     const score =
       forwardScore +
-      spaceScore -
-      crowdPenalty +
+      spaceScore +
       random(0, 2);
 
     if (score > bestScore) {
