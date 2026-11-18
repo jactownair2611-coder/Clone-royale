@@ -614,51 +614,46 @@ function chooseBotDirection(bot) {
   let bestDirection = bot.direction;
   let bestScore = -Infinity;
 
-  // Test 16 possible directions.
-  for (let i = 0; i < 16; i++) {
-    const angle = (Math.PI * 2 / 16) * i;
+  // Test 24 possible directions.
+  for (let i = 0; i < 24; i++) {
+    const angle = (Math.PI * 2 / 24) * i;
 
     const dx = Math.cos(angle);
     const dy = Math.sin(angle);
 
     let clearance = 0;
-    let blocked = false;
 
-    // Look ahead before choosing a direction.
-    for (const distance of [45, 85, 125, 165]) {
+    // Check farther ahead to avoid walking into obstacles.
+    for (const distance of [25, 50, 80, 110, 145, 180, 220]) {
       const testX = bot.x + dx * distance;
       const testY = bot.y + dy * distance;
 
       if (botPositionBlocked(testX, testY, bot)) {
-        blocked = true;
         break;
       }
 
       clearance++;
     }
 
-    if (blocked && clearance === 0) continue;
+    if (clearance === 0) continue;
 
-    // Prefer directions that continue the current journey.
     const forwardScore =
-      Math.cos(angle - bot.direction) * 25;
+      Math.cos(angle - bot.direction) * 20;
 
-    // Prefer directions with more open space.
-    const spaceScore = clearance * 12;
+    const spaceScore = clearance * 15;
 
-    // Avoid crowding other bots.
     let crowdPenalty = 0;
 
     for (const other of bots) {
       if (other === bot || !other.alive) continue;
 
       const distance = Math.hypot(
-        other.x - (bot.x + dx * 55),
-        other.y - (bot.y + dy * 55)
+        other.x - (bot.x + dx * 65),
+        other.y - (bot.y + dy * 65)
       );
 
-      if (distance < 42) {
-        crowdPenalty += (42 - distance) * 0.8;
+      if (distance < 45) {
+        crowdPenalty += (45 - distance);
       }
     }
 
@@ -666,7 +661,7 @@ function chooseBotDirection(bot) {
       forwardScore +
       spaceScore -
       crowdPenalty +
-      random(0, 3);
+      random(0, 2);
 
     if (score > bestScore) {
       bestScore = score;
@@ -728,9 +723,42 @@ function updateBots(dt) {
       bot.timer = 0.5;
 
     }
+   // Find the nearest character to face.
+let target = null;
+let closestDistance = 550;
 
-    // Face the direction the bot is travelling.
-    bot.aimAngle = bot.direction;
+const playerDistance = Math.hypot(
+  player.x - bot.x,
+  player.y - bot.y
+);
+
+if (playerDistance < closestDistance) {
+  closestDistance = playerDistance;
+  target = player;
+}
+
+for (const other of bots) {
+  if (other === bot || !other.alive) continue;
+
+  const distance = Math.hypot(
+    other.x - bot.x,
+    other.y - bot.y
+  );
+
+  if (distance < closestDistance) {
+    closestDistance = distance;
+    target = other;
+  }
+}
+
+if (target) {
+  bot.aimAngle = Math.atan2(
+    target.y - bot.y,
+    target.x - bot.x
+  );
+} else {
+  bot.aimAngle = bot.direction;
+}
   }
 }
 // ============================================
