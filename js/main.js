@@ -1395,7 +1395,5 @@ function gameLoop(now) {
 
 document.getElementById("status").textContent =
   "Version 0.2.0 | Island loaded | 49 AI bots deployed";
-
 updateCamera();
-
 requestAnimationFrame(gameLoop);
