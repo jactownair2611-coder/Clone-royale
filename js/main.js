@@ -892,13 +892,98 @@ function chooseBotInventorySlot(bot) {
   }
 }
 
-// Collect loot, including rewards from supply chests.
-function collectBotLoot(bot, item) {
+function getBotItemValue(item) {
+  if (!item) return 0;
 
+  const rarityValues = {
+    common: 1,
+    uncommon: 2,
+    rare: 3,
+    epic: 4,
+    legendary: 5
+  };
+
+  if (item.type === "weapon") {
+    return 10 + (rarityValues[item.rarity] || 1) * 10;
+  }
+
+  if (item.type === "medkit") return 15;
+  if (item.type === "shield") return 14;
+  if (item.type === "ammo") return 5;
+
+  return 1;
+}
+
+function addBotInventoryItem(bot, item) {
+  if (!item || !bot.inventory || !bot.inventory.slots) {
+    return false;
+  }
+
+  const stackable = ["ammo", "medkit", "shield"];
+
+  if (stackable.includes(item.type)) {
+    const existing = bot.inventory.slots.find(
+      slot => slot && slot.type === item.type
+    );
+
+    if (existing) {
+      existing.count = (existing.count || 1) +
+        (item.type === "ammo" ? item.amount : 1);
+
+      return true;
+    }
+  }
+
+  const emptySlot = bot.inventory.slots.findIndex(
+    slot => slot === null
+  );
+
+  if (emptySlot !== -1) {
+    bot.inventory.slots[emptySlot] = {
+      ...item,
+      count: stackable.includes(item.type)
+        ? (item.type === "ammo" ? item.amount : 1)
+        : 1
+    };
+
+    return true;
+  }
+
+  let weakestIndex = -1;
+  let weakestValue = Infinity;
+
+  bot.inventory.slots.forEach((slot, index) => {
+    const value = getBotItemValue(slot);
+
+    if (value < weakestValue) {
+      weakestValue = value;
+      weakestIndex = index;
+    }
+  });
+
+  if (
+    weakestIndex === -1 ||
+    getBotItemValue(item) <= weakestValue
+  ) {
+    return false;
+  }
+
+  bot.inventory.slots[weakestIndex] = {
+    ...item,
+    count: stackable.includes(item.type)
+      ? (item.type === "ammo" ? item.amount : 1)
+      : 1
+  };
+
+  return true;
+}
+
+// Collect loot, including rewards from supply chests.
+
+function collectBotLoot(bot, item) {
   if (!item) return;
 
   if (item.type === "chest") {
-
     const rewards = openChest(item);
 
     for (const reward of rewards) {
@@ -916,6 +1001,7 @@ function collectBotLoot(bot, item) {
     chooseBotInventorySlot(bot);
   }
 }
+
 
   // ============================================
 // AI LOOT PATHFINDING - VERSION 0.5.8
