@@ -1039,10 +1039,11 @@ if (!bot.isMoving) {
         delete bot.lootTarget.reservedBy;
       }
 
-      bot.lootTarget = null;
-bot.lootPathTimer = 0;
-}
+         bot.lootTarget = null;
+      bot.lootPathTimer = 0;
     }
+
+    // Look for loot when not already searching.
 
     // Look for loot when not already searching.
     if (!bot.lootTarget) {
@@ -1125,10 +1126,11 @@ bot.lootPathTimer = 0;
       bot.y = nextY;
     }
 
-    bot.direction = Math.atan2(moveY, moveX);
+        bot.direction = Math.atan2(moveY, moveX);
 
     smoothBotTurning(bot, dt);
   }
+}
 // ============================================
 // CAMERA UPDATE
 // ============================================
