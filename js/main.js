@@ -1192,9 +1192,13 @@ function drawCharacter(character, isPlayer = false) {
   for (const side of [-1, 1]) {
     const shoulderX = x + forwardX * r * 0.35 + sideX * r * 0.48;
     const shoulderY = y + forwardY * r * 0.35 + sideY * r * 0.48;
+// Left hand
+const leftHandX = x + forwardX * r * 1.55 + sideX * r * 0.65;
+const leftHandY = y + forwardY * r * 1.55 + sideY * r * 0.65;
 
-    const handX = x + forwardX * r * 1.55 + sideX * r * 0.65;
-const handY = y + forwardY * r * 1.55 + sideY * r * 0.65;
+// Right hand
+const rightHandX = x + forwardX * r * 1.55 - sideX * r * 0.65;
+const rightHandY = y + forwardY * r * 1.55 - sideY * r * 0.65;
     ctx.strokeStyle = outline;
     ctx.lineWidth = r * 0.42;
 
