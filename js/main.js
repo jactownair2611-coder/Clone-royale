@@ -1399,4 +1399,3 @@ document.getElementById("status").textContent =
 updateCamera();
 
 requestAnimationFrame(gameLoop);
-
