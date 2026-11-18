@@ -1188,42 +1188,41 @@ function drawCharacter(character, isPlayer = false) {
   ctx.ellipse(x + 3, y + 5, r * 1.15, r * 1.1, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Arms and hands follow aiming direction
+  
+  // Both arms and hands follow aiming direction
   for (const side of [-1, 1]) {
-    const shoulderX = x + forwardX * r * 0.35 + sideX * r * 0.48;
-    const shoulderY = y + forwardY * r * 0.35 + sideY * r * 0.48;
-// Left hand
-const leftHandX = x + forwardX * r * 1.55 + sideX * r * 0.65;
-const leftHandY = y + forwardY * r * 1.55 + sideY * r * 0.65;
+    const shoulderX = x + forwardX * r * 0.35 + sideX * r * 0.48 * side;
+    const shoulderY = y + forwardY * r * 0.35 + sideY * r * 0.48 * side;
 
-// Right hand
-const rightHandX = x + forwardX * r * 1.55 - sideX * r * 0.65;
-const rightHandY = y + forwardY * r * 1.55 - sideY * r * 0.65;
+    const handX = x + forwardX * r * 1.55 + sideX * r * 0.65 * side;
+    const handY = y + forwardY * r * 1.55 + sideY * r * 0.65 * side;
+
+    // Arm outline
     ctx.strokeStyle = outline;
     ctx.lineWidth = r * 0.42;
-
     ctx.beginPath();
     ctx.moveTo(shoulderX, shoulderY);
     ctx.lineTo(handX, handY);
     ctx.stroke();
 
+    // Arm color
     ctx.strokeStyle = bodyColor;
     ctx.lineWidth = r * 0.25;
-
     ctx.beginPath();
     ctx.moveTo(shoulderX, shoulderY);
     ctx.lineTo(handX, handY);
     ctx.stroke();
 
+    // Hand
     ctx.fillStyle = bodyColor;
     ctx.strokeStyle = outline;
     ctx.lineWidth = Math.max(1.5, r * 0.15);
-
     ctx.beginPath();
     ctx.arc(handX, handY, r * 0.32, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
   }
+
 
   // Main character body
   ctx.fillStyle = bodyColor;
