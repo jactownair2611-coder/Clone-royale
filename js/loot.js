@@ -238,7 +238,9 @@ function createItem(type, x, y, rarity = "common") {
 // LOOT GENERATION
 // ============================================
 
+
 export function generateLoot(buildings, world) {
+
   lootItems.length = 0;
   nextLootId = 1;
 
@@ -249,49 +251,64 @@ export function generateLoot(buildings, world) {
     building.y + building.h < world.height - 50
   );
 
+  // ========================================
+  // BUILDING LOOT
+  // ========================================
+
   for (let i = 0; i < availableBuildings.length; i++) {
+
     const building = availableBuildings[i];
 
     const centerX = building.x + building.w / 2;
     const centerY = building.y + building.h / 2;
 
-    // Place loot around the building exterior.
-    const itemCount = Math.floor(random(1, 4));
+    // Generate 3-6 ground items per building.
+    const itemCount = Math.floor(random(3, 7));
+
+    let weaponSpawned = false;
 
     for (let j = 0; j < itemCount; j++) {
+
       const side = Math.floor(random(0, 4));
+
       let x;
       let y;
 
       if (side === 0) {
         x = random(building.x, building.x + building.w);
-        y = building.y - random(30, 65);
+        y = building.y - random(30, 80);
       } else if (side === 1) {
         x = random(building.x, building.x + building.w);
-        y = building.y + building.h + random(30, 65);
+        y = building.y + building.h + random(30, 80);
       } else if (side === 2) {
-        x = building.x - random(30, 65);
+        x = building.x - random(30, 80);
         y = random(building.y, building.y + building.h);
       } else {
-        x = building.x + building.w + random(30, 65);
+        x = building.x + building.w + random(30, 80);
         y = random(building.y, building.y + building.h);
       }
 
       x = Math.max(25, Math.min(world.width - 25, x));
       y = Math.max(25, Math.min(world.height - 25, y));
 
-      const roll = Math.random();
-
       let type;
 
-      if (roll < 0.48) {
+      // Guarantee at least one weapon per building.
+      if (!weaponSpawned) {
         type = "weapon";
-      } else if (roll < 0.77) {
-        type = "ammo";
-      } else if (roll < 0.90) {
-        type = "medkit";
+        weaponSpawned = true;
       } else {
-        type = "shield";
+        const roll = Math.random();
+
+        if (roll < 0.30) {
+          type = "weapon";
+        } else if (roll < 0.65) {
+          type = "ammo";
+        } else if (roll < 0.83) {
+          type = "medkit";
+        } else {
+          type = "shield";
+        }
       }
 
       lootItems.push(
@@ -299,23 +316,65 @@ export function generateLoot(buildings, world) {
       );
     }
 
-    // Supply chests appear less frequently.
-    if (i % 5 === 0 && Math.random() < 0.8) {
+    // Supply chests are less common.
+    if (i % 7 === 0 && Math.random() < 0.65) {
+
       lootItems.push(
         createItem(
           "chest",
-          centerX + random(-100, 100),
-          centerY + random(-100, 100)
+          centerX + random(-60, 60),
+          centerY + random(-60, 60)
         )
       );
     }
   }
 
-  console.log(
-    "Loot generated:",
-    lootItems.length,
-    "items"
-  );
+  // ========================================
+  // EXTRA SCATTERED ISLAND LOOT
+  // ========================================
+
+  const extraLootCount = 100;
+
+  for (let i = 0; i < extraLootCount; i++) {
+
+    const x = random(100, world.width - 100);
+    const y = random(100, world.height - 100);
+
+    const roll = Math.random();
+
+    let type;
+
+    if (roll < 0.40) {
+      type = "weapon";
+    } else if (roll < 0.70) {
+      type = "ammo";
+    } else if (roll < 0.85) {
+      type = "medkit";
+    } else {
+      type = "shield";
+    }
+
+    lootItems.push(
+      createItem(type, x, y, chooseRarity())
+    );
+  }
+
+  // ========================================
+  // LOOT STATISTICS
+  // ========================================
+
+  const weaponCount = lootItems.filter(
+    item => item.type === "weapon"
+  ).length;
+
+  const chestCount = lootItems.filter(
+    item => item.type === "chest"
+  ).length;
+
+  console.log("ULTIMATE ROYALE LOOT SYSTEM");
+  console.log("Total loot:", lootItems.length);
+  console.log("Weapons:", weaponCount);
+  console.log("Chests:", chestCount);
 }
 
 // ============================================
