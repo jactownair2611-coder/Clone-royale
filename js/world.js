@@ -1092,3 +1092,59 @@ export function drawWorld(ctx) {
   drawTrees(ctx);
   drawPOIs(ctx);
 }
+
+// ============================================
+// LOOT PLACEMENT VALIDATION
+// ============================================
+
+export function isClearLootLocation(x, y, padding = 30) {
+  // Keep loot safely inside the island.
+  if (!insideIsland(x, y, 100 + padding)) {
+    return false;
+  }
+
+  // Keep loot away from roads and intersections.
+  if (nearRoad(x, y, padding + 15)) {
+    return false;
+  }
+
+  // Keep loot away from buildings.
+  if (buildings.some(b =>
+    x + padding > b.x - 15 &&
+    x - padding < b.x + b.w + 15 &&
+    y + padding > b.y - 15 &&
+    y - padding < b.y + b.h + 15
+  )) {
+    return false;
+  }
+
+  // Keep loot away from trees.
+  if (trees.some(t =>
+    Math.hypot(x - t.x, y - t.y) <
+    t.radius + padding + 12
+  )) {
+    return false;
+  }
+
+  // Keep loot away from parking lots.
+  if (parkingLots.some(lot =>
+    x + padding > lot.x &&
+    x - padding < lot.x + lot.w &&
+    y + padding > lot.y &&
+    y - padding < lot.y + lot.h
+  )) {
+    return false;
+  }
+
+  // Keep loot away from airport runways.
+  if (runways.some(r =>
+    x + padding > r.x &&
+    x - padding < r.x + r.width &&
+    y + padding > r.y &&
+    y - padding < r.y + r.height
+  )) {
+    return false;
+  }
+
+  return true;
+}
