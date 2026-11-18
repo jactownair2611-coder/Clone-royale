@@ -609,7 +609,58 @@ function botPositionBlocked(x, y, bot) {
     overlapsTree(x, y, bot.radius)
   );
 }
+// ============================================
+// BOT OBSTACLE AVOIDANCE
+// ============================================
 
+function getBotAvoidance(bot) {
+  let avoidX = 0;
+  let avoidY = 0;
+
+  // Avoid trees.
+  for (const tree of trees) {
+    const dx = bot.x - tree.x;
+    const dy = bot.y - tree.y;
+    const distance = Math.hypot(dx, dy);
+
+    const safeDistance = bot.radius + tree.radius * 0.75 + 35;
+
+    if (distance < safeDistance && distance > 0) {
+      const strength = (safeDistance - distance) / safeDistance;
+
+      avoidX += (dx / distance) * strength;
+      avoidY += (dy / distance) * strength;
+    }
+  }
+
+  // Avoid buildings.
+  for (const building of buildings) {
+    const closestX = Math.max(
+      building.x,
+      Math.min(bot.x, building.x + building.w)
+    );
+
+    const closestY = Math.max(
+      building.y,
+      Math.min(bot.y, building.y + building.h)
+    );
+
+    const dx = bot.x - closestX;
+    const dy = bot.y - closestY;
+    const distance = Math.hypot(dx, dy);
+
+    const safeDistance = bot.radius + 35;
+
+    if (distance < safeDistance && distance > 0) {
+      const strength = (safeDistance - distance) / safeDistance;
+
+      avoidX += (dx / distance) * strength;
+      avoidY += (dy / distance) * strength;
+    }
+  }
+
+  return { x: avoidX, y: avoidY };
+}
 function chooseBotDirection(bot) {
   let bestDirection = bot.direction;
   let bestScore = -Infinity;
