@@ -556,6 +556,7 @@ function traceRoad(ctx, points) {
 }
 
 
+
 function drawRoads(ctx) {
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
@@ -564,10 +565,24 @@ function drawRoads(ctx) {
     const isStreet = road.type === "street";
     const isHighway = road.type === "highway";
 
-    // Dark road borders
+    // Sidewalks on smaller neighborhood streets
+    if (isStreet) {
+      traceRoad(ctx, road.points);
+      ctx.strokeStyle = "#c5bea8";
+      ctx.lineWidth = road.width + 26;
+      ctx.stroke();
+
+      // Dark curb edge
+      traceRoad(ctx, road.points);
+      ctx.strokeStyle = "#68736b";
+      ctx.lineWidth = road.width + 10;
+      ctx.stroke();
+    }
+
+    // Outer road border
     traceRoad(ctx, road.points);
     ctx.strokeStyle = "#53665a";
-    ctx.lineWidth = road.width + (isStreet ? 7 : 13);
+    ctx.lineWidth = road.width + 13;
     ctx.stroke();
 
     // Main road surface
@@ -587,7 +602,11 @@ function drawRoads(ctx) {
       traceRoad(ctx, road.points);
       ctx.strokeStyle = isHighway ? "#f5e3a0" : "#e9e2c8";
       ctx.lineWidth = isHighway ? 3 : 2;
-      ctx.setLineDash(isHighway ? [27, 25] : [14, 20]);
+
+      ctx.setLineDash(
+        isHighway ? [27, 25] : [14, 20]
+      );
+
       ctx.stroke();
       ctx.setLineDash([]);
     }
@@ -603,6 +622,7 @@ function drawRoads(ctx) {
     }
   }
 }
+
 
 // ============================================
 // AIRPORT RUNWAYS
