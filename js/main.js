@@ -598,9 +598,86 @@ player.aimAngle = Math.atan2(
   }
 }
 
-
 // ============================================
-// AI BOT UPDATE
+// SMART BOT NAVIGATION - VERSION 0.5.0
+// ============================================
+
+function botPositionBlocked(x, y, bot) {
+  return (
+    !insideIsland(x, y) ||
+    overlapsBuilding(x, y, bot.radius) ||
+    overlapsTree(x, y, bot.radius)
+  );
+}
+
+function chooseBotDirection(bot) {
+  let bestDirection = bot.direction;
+  let bestScore = -Infinity;
+
+  // Test 16 possible directions.
+  for (let i = 0; i < 16; i++) {
+    const angle = (Math.PI * 2 / 16) * i;
+
+    const dx = Math.cos(angle);
+    const dy = Math.sin(angle);
+
+    let clearance = 0;
+    let blocked = false;
+
+    // Look ahead before choosing a direction.
+    for (const distance of [45, 85, 125, 165]) {
+      const testX = bot.x + dx * distance;
+      const testY = bot.y + dy * distance;
+
+      if (botPositionBlocked(testX, testY, bot)) {
+        blocked = true;
+        break;
+      }
+
+      clearance++;
+    }
+
+    if (blocked && clearance === 0) continue;
+
+    // Prefer directions that continue the current journey.
+    const forwardScore =
+      Math.cos(angle - bot.direction) * 25;
+
+    // Prefer directions with more open space.
+    const spaceScore = clearance * 12;
+
+    // Avoid crowding other bots.
+    let crowdPenalty = 0;
+
+    for (const other of bots) {
+      if (other === bot || !other.alive) continue;
+
+      const distance = Math.hypot(
+        other.x - (bot.x + dx * 55),
+        other.y - (bot.y + dy * 55)
+      );
+
+      if (distance < 42) {
+        crowdPenalty += (42 - distance) * 0.8;
+      }
+    }
+
+    const score =
+      forwardScore +
+      spaceScore -
+      crowdPenalty +
+      random(0, 3);
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestDirection = angle;
+    }
+  }
+
+  return bestDirection;
+}
+// ============================================
+// AI BOT UPDATE - VERSION 0.5.0
 // ============================================
 
 function updateBots(dt) {
@@ -608,78 +685,54 @@ function updateBots(dt) {
   for (const bot of bots) {
 
     if (!bot.alive) continue;
-// Find a nearby target to aim at.
-let target = null;
-let closestDistance = 550;
 
-const playerDistance = Math.hypot(
-  player.x - bot.x,
-  player.y - bot.y
-);
-
-if (playerDistance < closestDistance) {
-  closestDistance = playerDistance;
-  target = player;
-}
-
-// Otherwise, look for the nearest other living bot.
-for (const other of bots) {
-  if (other === bot || !other.alive) continue;
-
-  const distance = Math.hypot(
-    other.x - bot.x,
-    other.y - bot.y
-  );
-
-  if (distance < closestDistance) {
-    closestDistance = distance;
-    target = other;
-  }
-}
-
-if (target) {
-  bot.aimAngle = Math.atan2(
-    target.y - bot.y,
-    target.x - bot.x
-  );
-} else {
-  bot.aimAngle = bot.direction;
-}
     bot.timer -= dt;
 
-    if (bot.timer <= 0) {
+    const nextX =
+      bot.x + Math.cos(bot.direction) * bot.speed * dt;
 
-      bot.direction = random(0, Math.PI * 2);
-      bot.timer = random(1.5, 4);
+    const nextY =
+      bot.y + Math.sin(bot.direction) * bot.speed * dt;
 
+    // Check whether the current direction is safe.
+    const blocked = botPositionBlocked(
+      nextX,
+      nextY,
+      bot
+    );
+
+    // Pick a smarter direction when necessary.
+    if (blocked || bot.timer <= 0) {
+
+      bot.direction = chooseBotDirection(bot);
+
+      bot.timer = random(1.5, 3.5);
     }
 
-    const dx = Math.cos(bot.direction);
-    const dy = Math.sin(bot.direction);
+    // Move using the newly selected direction.
+    const moveX =
+      bot.x + Math.cos(bot.direction) * bot.speed * dt;
 
-    const nextX = bot.x + dx * bot.speed * dt;
-    const nextY = bot.y + dy * bot.speed * dt;
+    const moveY =
+      bot.y + Math.sin(bot.direction) * bot.speed * dt;
 
-    const blocked =
-  !insideIsland(nextX, nextY) ||
-  overlapsBuilding(nextX, nextY, bot.radius) ||
-  overlapsTree(nextX, nextY, bot.radius);
-    if (!blocked) {
+    if (!botPositionBlocked(moveX, moveY, bot)) {
 
-      bot.x = nextX;
-      bot.y = nextY;
+      bot.x = moveX;
+      bot.y = moveY;
 
     } else {
 
-      bot.direction = random(0, Math.PI * 2);
+      // Try another direction if the path becomes blocked.
+      bot.direction = chooseBotDirection(bot);
       bot.timer = 0.5;
 
     }
 
+    // Face the direction the bot is travelling.
+    bot.aimAngle = bot.direction;
   }
-
 }
-
 // ============================================
 // CAMERA UPDATE
 // ============================================
