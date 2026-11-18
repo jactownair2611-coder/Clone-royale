@@ -1037,7 +1037,6 @@ continue;
 
       bot.lootTarget = null;
       lootPathTimer: 0,
-lootPathDirection: 0,
     }
 
     // Look for loot when not already searching.
