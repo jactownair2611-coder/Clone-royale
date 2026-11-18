@@ -261,7 +261,7 @@ function tryExitBuilding() {
 
 const player = {
   x: 2000,
-  y: 1600,
+  y: 1500,
   radius: 9,
   speed: 230,
   color: "#35a9ff",
