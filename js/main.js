@@ -158,6 +158,10 @@ function overlapsBuilding(x, y, radius) {
 // TREE COLLISION
 // ============================================
 
+// ============================================
+// ACCURATE TREE COLLISION - VERSION 0.5.2
+// ============================================
+
 function overlapsTree(x, y, radius) {
 
   for (const tree of trees) {
@@ -165,7 +169,9 @@ function overlapsTree(x, y, radius) {
     const dx = x - tree.x;
     const dy = y - tree.y;
 
-    const collisionRadius = radius + tree.radius * 0.75;
+    // Match collision to the visible tree canopy.
+    const collisionRadius =
+      radius + tree.radius + 4;
 
     if (
       dx * dx + dy * dy <
@@ -173,12 +179,10 @@ function overlapsTree(x, y, radius) {
     ) {
       return true;
     }
-
   }
 
   return false;
 }
-
 // ============================================
 // BUILDING ENTRY AND EXIT
 // ============================================
