@@ -74,57 +74,197 @@ const locations = [
 
 pois.push(...locations);
 
+
  // ============================================
- // ROAD NETWORK - VERSION 0.4.1
+ // ROAD NETWORK - VERSION 0.5.0
+ // Connected island road system
  // ============================================
 
 roads.push(
+  // Main east-west highway
   {
     points: [
-      [250,1250],
-      [700,1200],
-      [1150,1240],
-      [1600,1280],
-      [2100,1250],
-      [2600,1190],
-      [3150,1160],
-      [3750,1250]
+      [180, 1450], [450, 1390], [760, 1410],
+      [1050, 1470], [1370, 1500], [1700, 1460],
+      [2020, 1400], [2350, 1370], [2670, 1390],
+      [3000, 1450], [3330, 1500], [3820, 1460]
     ],
-    width: 70,
+    width: 76,
     type: "highway"
   },
+
+  // Northern coastal connector
   {
     points: [
-      [300,350],
-      [900,350],
-      [1500,390],
-      [2100,390],
-      [2400,420]
+      [420, 850], [720, 720], [1030, 650],
+      [1370, 620], [1700, 650], [2020, 720],
+      [2350, 700], [2670, 620], [3000, 600],
+      [3370, 720], [3650, 930]
+    ],
+    width: 42,
+    type: "road"
+  },
+
+  // Southern coastal connector
+  {
+    points: [
+      [250, 2460], [570, 2390], [900, 2420],
+      [1220, 2500], [1550, 2580], [1900, 2600],
+      [2250, 2540], [2580, 2470], [2910, 2470],
+      [3240, 2540], [3670, 2460]
+    ],
+    width: 44,
+    type: "road"
+  },
+
+  // Grand City access road
+  {
+    points: [
+      [760, 1410], [720, 1230], [680, 1060],
+      [760, 900], [900, 760], [1050, 650]
     ],
     width: 38,
     type: "road"
   },
+
+  // Airport access road
   {
     points: [
-      [300,2850],
-      [900,2800],
-      [1500,2820],
-      [2100,2850],
-      [2700,2800],
-      [3300,2820],
-      [3700,2850]
+      [2670, 1390], [2760, 1190], [2890, 1010],
+      [3000, 850], [3000, 600]
     ],
     width: 42,
     type: "road"
+  },
+
+  // Military base access
+  {
+    points: [
+      [3330, 1500], [3400, 1350], [3450, 1190],
+      [3500, 1040], [3650, 930]
+    ],
+    width: 36,
+    type: "road"
+  },
+
+  // Harbor access
+  {
+    points: [
+      [570, 2390], [540, 2530], [470, 2700],
+      [350, 2820]
+    ],
+    width: 36,
+    type: "road"
+  },
+
+  // Pinewood suburbs access
+  {
+    points: [
+      [1050, 1470], [1150, 1600], [1250, 1740],
+      [1390, 1870], [1510, 1990]
+    ],
+    width: 34,
+    type: "road"
+  },
+
+  // Research facility access
+  {
+    points: [
+      [2910, 2470], [2900, 2290], [3000, 2110],
+      [3110, 1940], [3150, 1760], [3000, 1450]
+    ],
+    width: 38,
+    type: "road"
+  },
+
+  // Mega Mall access
+  {
+    points: [
+      [1900, 2600], [1940, 2390], [1980, 2180],
+      [2020, 1960], [2020, 1740], [2020, 1400]
+    ],
+    width: 38,
+    type: "road"
+  },
+
+  // Western interior connector
+  {
+    points: [
+      [760, 1410], [620, 1610], [510, 1810],
+      [480, 2030], [570, 2390]
+    ],
+    width: 30,
+    type: "road"
+  },
+
+  // Eastern interior connector
+  {
+    points: [
+      [2670, 1390], [2570, 1580], [2540, 1780],
+      [2600, 1980], [2750, 2200], [2910, 2470]
+    ],
+    width: 30,
+    type: "road"
+  },
+
+  // City neighborhood streets
+  {
+    points: [
+      [400, 570], [650, 550], [900, 570],
+      [1120, 620]
+    ],
+    width: 22,
+    type: "street"
+  },
+  {
+    points: [
+      [430, 850], [650, 830], [900, 850],
+      [1120, 900]
+    ],
+    width: 22,
+    type: "street"
+  },
+  {
+    points: [
+      [470, 1080], [700, 1060], [930, 1080]
+    ],
+    width: 22,
+    type: "street"
+  },
+
+  // Suburban neighborhood streets
+  {
+    points: [
+      [920, 1640], [1120, 1600], [1330, 1620],
+      [1540, 1680]
+    ],
+    width: 20,
+    type: "street"
+  },
+  {
+    points: [
+      [960, 1850], [1160, 1810], [1370, 1830],
+      [1570, 1890]
+    ],
+    width: 20,
+    type: "street"
+  },
+  {
+    points: [
+      [1030, 2050], [1240, 2010], [1450, 2030]
+    ],
+    width: 20,
+    type: "street"
   }
 );
 
 
  // ============================================
- // BUILDING GENERATION - VERSION 0.4.1
+ // BUILDING GENERATION - VERSION 0.5.0
+ // Spaced-out neighborhoods and districts
  // ============================================
 
-function overlapsExisting(x, y, w, h, gap = 30) {
+function overlapsExisting(x, y, w, h, gap = 45) {
   return buildings.some(b =>
     x < b.x + b.w + gap &&
     x + w + gap > b.x &&
@@ -143,19 +283,12 @@ function addBuilding(x, y, w, h, type, style = 0) {
   return building;
 }
 
-function tryBuilding(x, y, w, h, type, gap = 30) {
-
-  if (!insideIsland(x + w / 2, y + h / 2, 70)) {
+function tryBuilding(x, y, w, h, type, gap = 45) {
+  if (!insideIsland(x + w / 2, y + h / 2, 90)) {
     return false;
   }
 
-  if (
-    nearRoad(
-      x + w / 2,
-      y + h / 2,
-      Math.max(w, h) * 0.55
-    )
-  ) {
+  if (nearRoad(x + w / 2, y + h / 2, 35)) {
     return false;
   }
 
@@ -171,108 +304,91 @@ function tryBuilding(x, y, w, h, type, gap = 30) {
 // GRAND CITY
 // ============================================
 
-for (let row = 0; row < 3; row++) {
-  for (let col = 0; col < 3; col++) {
+const cityBlocks = [
+  [430, 650], [620, 650], [810, 650], [1000, 650],
+  [470, 930], [660, 930], [850, 930], [1040, 930]
+];
 
-    const x = 480 + col * 240;
-    const y = 480 + row * 220;
-
-    tryBuilding(x, y, 210, 180, "city", 30);
-  }
+for (const [x, y] of cityBlocks) {
+  tryBuilding(x, y, 135, 125, "city", 45);
 }
+
+// A few larger city buildings
+tryBuilding(480, 1160, 175, 145, "city", 55);
+tryBuilding(800, 1160, 175, 145, "city", 55);
 
 // ============================================
 // PINEWOOD SUBURBS
 // ============================================
 
-for (let row = 0; row < 3; row++) {
-  for (let col = 0; col < 3; col++) {
+const suburbHouses = [
+  [960, 1690], [1160, 1690], [1360, 1690],
+  [1010, 1900], [1210, 1900], [1410, 1900],
+  [1080, 2110], [1280, 2110]
+];
 
-    const x = 900 + col * 210;
-    const y = 1600 + row * 180;
-
-    tryBuilding(x, y, 180, 150, "house", 30);
-  }
+for (const [x, y] of suburbHouses) {
+  tryBuilding(x, y, 115, 100, "house", 55);
 }
 
 // ============================================
 // INTERNATIONAL AIRPORT
 // ============================================
 
-// Large aircraft hangars
+// Hangars with room between them
+tryBuilding(2520, 490, 230, 165, "hangar", 55);
+tryBuilding(2810, 490, 230, 165, "hangar", 55);
+tryBuilding(3100, 490, 230, 165, "hangar", 55);
 
-for (let row = 0; row < 2; row++) {
-  for (let col = 0; col < 3; col++) {
+tryBuilding(2520, 760, 230, 165, "hangar", 55);
+tryBuilding(2810, 760, 230, 165, "hangar", 55);
+tryBuilding(3100, 760, 230, 165, "hangar", 55);
 
-    const x = 2520 + col * 300;
-    const y = 500 + row * 230;
-
-    tryBuilding(x, y, 270, 190, "hangar", 30);
-  }
-}
-
-// Main terminal
-
-tryBuilding(
-  2670, 960,
-  500, 210,
-  "terminal",
-  40
-);
+// Airport terminal
+tryBuilding(2640, 1030, 500, 190, "terminal", 65);
 
 // ============================================
 // MILITARY BASE
 // ============================================
 
-for (let row = 0; row < 2; row++) {
-  for (let col = 0; col < 2; col++) {
-
-    const x = 2920 + col * 310;
-    const y = 1360 + row * 240;
-
-    tryBuilding(x, y, 260, 190, "military", 35);
-  }
-}
+tryBuilding(3020, 1590, 220, 165, "military", 55);
+tryBuilding(3320, 1590, 220, 165, "military", 55);
+tryBuilding(3020, 1840, 220, 165, "military", 55);
+tryBuilding(3320, 1840, 220, 165, "military", 55);
 
 // ============================================
 // POWER PLANT
 // ============================================
 
-for (let row = 0; row < 2; row++) {
-  for (let col = 0; col < 3; col++) {
+tryBuilding(1650, 790, 230, 175, "industrial", 55);
+tryBuilding(1950, 790, 230, 175, "industrial", 55);
+tryBuilding(2250, 790, 230, 175, "industrial", 55);
 
-    const x = 1710 + col * 290;
-    const y = 520 + row * 240;
-
-    tryBuilding(x, y, 250, 190, "industrial", 35);
-  }
-}
+tryBuilding(1650, 1060, 230, 175, "industrial", 55);
+tryBuilding(1950, 1060, 230, 175, "industrial", 55);
 
 // ============================================
 // SEASIDE HARBOR
 // ============================================
 
-tryBuilding(380, 2440, 300, 210, "warehouse", 40);
-tryBuilding(720, 2450, 280, 200, "warehouse", 40);
+tryBuilding(300, 2580, 220, 165, "warehouse", 55);
+tryBuilding(590, 2580, 220, 165, "warehouse", 55);
+tryBuilding(390, 2810, 200, 145, "warehouse", 55);
 
 // ============================================
 // RESEARCH FACILITY
 // ============================================
 
-tryBuilding(2570, 2200, 260, 190, "research", 35);
-tryBuilding(2870, 2200, 260, 190, "research", 35);
-tryBuilding(2720, 2440, 280, 200, "research", 35);
+tryBuilding(2700, 2200, 220, 165, "research", 55);
+tryBuilding(3000, 2200, 220, 165, "research", 55);
+tryBuilding(2850, 2450, 240, 175, "research", 55);
 
 // ============================================
 // MEGA MALL
 // ============================================
 
-tryBuilding(
-  1600, 2280,
-  520, 360,
-  "mall",
-  50
-);
+tryBuilding(1660, 2290, 480, 300, "mall", 70);
+
 
 // ============================================
 // AIRPORT RUNWAYS
@@ -295,7 +411,7 @@ for (let i = 0; i < 1450; i++) {
   if (nearRoad(x, y, 45)) continue;
 
   if (
-    locations.some(p => Math.hypot(x - p.x, y - p.y) < 360)
+    locations.some(p => Math.hypot(x - p.x, y - p.y) < 220)
   ) continue;
 
   if (
@@ -449,40 +565,49 @@ function traceRoad(ctx, points) {
   });
 }
 
+
 function drawRoads(ctx) {
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
 
   for (const road of roads) {
+    const isStreet = road.type === "street";
+    const isHighway = road.type === "highway";
+
+    // Dark road borders
     traceRoad(ctx, road.points);
     ctx.strokeStyle = "#53665a";
-    ctx.lineWidth = road.width + 13;
+    ctx.lineWidth = road.width + (isStreet ? 7 : 13);
     ctx.stroke();
 
+    // Main road surface
     traceRoad(ctx, road.points);
-    ctx.strokeStyle = "#777f7d";
+    ctx.strokeStyle = isStreet ? "#858b83" : "#777f7d";
     ctx.lineWidth = road.width;
     ctx.stroke();
 
+    // Road surface highlight
     traceRoad(ctx, road.points);
     ctx.strokeStyle = "rgba(255,255,255,0.13)";
-    ctx.lineWidth = road.width - 8;
+    ctx.lineWidth = Math.max(2, road.width - 8);
     ctx.stroke();
 
-    traceRoad(ctx, road.points);
-    ctx.strokeStyle = "#f2d987";
-    ctx.lineWidth = 3;
-    ctx.setLineDash(
-      road.type === "highway" ? [27, 25] : [17, 22]
-    );
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    if (road.type === "highway") {
+    // Center markings
+    if (!isStreet) {
       traceRoad(ctx, road.points);
-      ctx.strokeStyle = "rgba(255,255,255,0.35)";
+      ctx.strokeStyle = isHighway ? "#f5e3a0" : "#e9e2c8";
+      ctx.lineWidth = isHighway ? 3 : 2;
+      ctx.setLineDash(isHighway ? [27, 25] : [14, 20]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    // Highway edge markings
+    if (isHighway) {
+      traceRoad(ctx, road.points);
+      ctx.strokeStyle = "rgba(255,255,255,0.4)";
       ctx.lineWidth = 2;
-      ctx.setLineDash([3, 49]);
+      ctx.setLineDash([4, 45]);
       ctx.stroke();
       ctx.setLineDash([]);
     }
