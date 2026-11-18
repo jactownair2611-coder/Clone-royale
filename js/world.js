@@ -273,20 +273,48 @@ function addBuilding(x, y, w, h, type, style = 0) {
   return building;
 }
 
+
 function tryBuilding(x, y, w, h, type, gap = 45) {
-  if (!insideIsland(x + w / 2, y + h / 2, 90)) {
+
+  // Building enlargement by type
+  const scales = {
+    house: 1.45,
+    city: 1.30,
+    hangar: 1.20,
+    terminal: 1.12,
+    military: 1.20,
+    industrial: 1.20,
+    warehouse: 1.20,
+    research: 1.20,
+    mall: 1.15
+  };
+
+  const scale = scales[type] || 1.20;
+
+  const newW = Math.round(w * scale);
+  const newH = Math.round(h * scale);
+
+  // Keep the original building center in the same location
+  x -= (newW - w) / 2;
+  y -= (newH - h) / 2;
+
+  // Smaller gaps allow larger buildings to fit
+  gap = Math.min(gap, 12);
+
+  if (!insideIsland(x + newW / 2, y + newH / 2, 90)) {
     return false;
   }
 
-  if (nearRoad(x + w / 2, y + h / 2, 35)) {
+  if (nearRoad(x + newW / 2, y + newH / 2, 35)) {
     return false;
   }
 
-  if (overlapsExisting(x, y, w, h, gap)) {
+  if (overlapsExisting(x, y, newW, newH, gap)) {
     return false;
   }
 
-  addBuilding(x, y, w, h, type, random(0, 4));
+  addBuilding(x, y, newW, newH, type, random(0, 4));
+
   return true;
 }
 
@@ -384,7 +412,7 @@ tryBuilding(1660, 2290, 480, 300, "mall", 70);
 
 export const parkingLots = [
   {
-    x: 2160,
+    x: 2260,
     y: 2310,
     w: 360,
     h: 300,
@@ -1039,13 +1067,14 @@ function drawPOIs(ctx) {
 // MAIN WORLD DRAW FUNCTION
 // ============================================
 
+
 export function drawWorld(ctx) {
-  drawParkingLots(ctx);
   drawWater(ctx);
   drawIsland(ctx);
   drawGrass(ctx);
   drawRoads(ctx);
   drawIntersections(ctx);
+  drawParkingLots(ctx);
   drawRunways(ctx);
   drawBuildings(ctx);
   drawTrees(ctx);
