@@ -1082,28 +1082,31 @@ function updateBotIdle(bot, dt) {
     chooseBotInventorySlot(bot);
   }
 
-  if (bot.idleAction === "heal") {
-    if (
-     bot.inventory.slots.some(
-  item => item && item.type === "medkit"
-)
-      bot.health < 100
-    ) {
-      bot.health = Math.min(100, bot.health + 35);
-     const medkit = bot.inventory.slots.find(
-  item => item && item.type === "medkit"
-);
+  
+if (bot.idleAction === "heal") {
+  if (
+    bot.inventory.slots.some(
+      item => item && item.type === "medkit"
+    ) &&
+    bot.health < 100
+  ) {
+    bot.health = Math.min(100, bot.health + 35);
 
-if (medkit) {
-  medkit.count--;
+    const medkit = bot.inventory.slots.find(
+      item => item && item.type === "medkit"
+    );
 
-  if (medkit.count <= 0) {
-    const index = bot.inventory.slots.indexOf(medkit);
-    bot.inventory.slots[index] = null;
-  }
-}
+    if (medkit) {
+      medkit.count--;
+
+      if (medkit.count <= 0) {
+        const index = bot.inventory.slots.indexOf(medkit);
+        bot.inventory.slots[index] = null;
+      }
     }
   }
+}
+
 
   bot.idleAction = "none";
   bot.isMoving = true;
