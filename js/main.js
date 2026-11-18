@@ -470,15 +470,17 @@ team: 0,
   shields: 0
 },
 
-lootTarget: null,
 idleAction: "none",
 idleTimer: random(3, 8),
 lookAngle: 0,
 selectedWeapon: 0,
 isMoving: true,
-    aimAngle: 0,
 
-  });
+// Smooth awareness system
+aimAngle: random(-Math.PI, Math.PI),
+targetAimAngle: 0,
+lookDirection: 1,
+lookTimer: random(1, 3),
 
 }
 
@@ -888,14 +890,87 @@ function updateBotIdle(bot, dt) {
   bot.isMoving = true;
   bot.idleTimer = random(5, 12);
 }
+  // ============================================
+// SMOOTH BOT TURNING - VERSION 0.5.7
+// ============================================
+
+function smoothBotTurning(bot, dt) {
+  let target = null;
+  let closestDistance = 300;
+
+  // Check the player.
+  const playerDistance = Math.hypot(
+    player.x - bot.x,
+    player.y - bot.y
+  );
+
+  if (playerDistance < closestDistance) {
+    closestDistance = playerDistance;
+    target = player;
+  }
+
+  // Check other bots.
+  for (const other of bots) {
+    if (other === bot || !other.alive) continue;
+
+    const distance = Math.hypot(
+      other.x - bot.x,
+      other.y - bot.y
+    );
+
+    if (distance < closestDistance) {
+      closestDistance = distance;
+      target = other;
+    }
+  }
+
+  // Look at a nearby character, or scan the surroundings.
+  if (target) {
+    bot.targetAimAngle = Math.atan2(
+      target.y - bot.y,
+      target.x - bot.x
+    );
+  } else {
+    bot.lookTimer -= dt;
+
+    if (bot.lookTimer <= 0) {
+      bot.lookDirection *= -1;
+      bot.lookTimer = random(1.5, 3.5);
+    }
+
+    bot.targetAimAngle +=
+      bot.lookDirection * dt * 0.65;
+
+    // Keep the scanning angle within a comfortable range.
+    bot.targetAimAngle = Math.max(
+      bot.direction - 1.1,
+      Math.min(bot.targetAimAngle, bot.direction + 1.1)
+    );
+  }
+
+  // Calculate the shortest angular difference.
+  let difference =
+    bot.targetAimAngle - bot.aimAngle;
+
+  difference = Math.atan2(
+    Math.sin(difference),
+    Math.cos(difference)
+  );
+
+  // Gradually rotate toward the desired direction.
+  const turnSpeed = 3.5;
+
+  bot.aimAngle += difference *
+    Math.min(1, turnSpeed * dt);
+}
 function updateBots(dt) {
   for (const bot of bots) {
     if (!bot.alive) continue;
 updateBotIdle(bot, dt);
 
 if (!bot.isMoving) {
-  bot.aimAngle = bot.lookAngle || bot.direction;
-  continue;
+  continue;smoothBotTurning(bot, dt);
+continue;
 }
     // Release invalid loot targets.
     if (
@@ -982,37 +1057,7 @@ if (!bot.isMoving) {
 
     bot.direction = Math.atan2(moveY, moveX);
 
-    // Keep character-facing behavior.
-    let target = null;
-    let closestDistance = 550;
-
-    const playerDistance = Math.hypot(
-      player.x - bot.x,
-      player.y - bot.y
-    );
-
-    if (playerDistance < closestDistance) {
-      closestDistance = playerDistance;
-      target = player;
-    }
-
-    for (const other of bots) {
-      if (other === bot || !other.alive) continue;
-
-      const distance = Math.hypot(
-        other.x - bot.x,
-        other.y - bot.y
-      );
-
-      if (distance < closestDistance) {
-        closestDistance = distance;
-        target = other;
-      }
-    }
-
-    bot.aimAngle = target
-      ? Math.atan2(target.y - bot.y, target.x - bot.x)
-      : bot.direction;
+    smoothBotTurning(bot, dt);
   }
 }
 // ============================================
@@ -1077,9 +1122,8 @@ function drawCharacter(character, isPlayer = false) {
     const shoulderX = x + forwardX * r * 0.35 + sideX * r * 0.48;
     const shoulderY = y + forwardY * r * 0.35 + sideY * r * 0.48;
 
-    const handX = x + forwardX * r * 1.35 + sideX * r * 0.48;
-    const handY = y + forwardY * r * 1.35 + sideY * r * 0.48;
-
+    const handX = x + forwardX * r * 1.55 + sideX * r * 0.65;
+const handY = y + forwardY * r * 1.55 + sideY * r * 0.65;
     ctx.strokeStyle = outline;
     ctx.lineWidth = r * 0.42;
 
