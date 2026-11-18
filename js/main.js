@@ -761,6 +761,60 @@ function collectBotLoot(bot, item) {
 
   removeLoot(item.id);
 }
+  // ============================================
+// AI LOOT PATHFINDING - VERSION 0.5.8
+// ============================================
+
+function chooseBotLootDirection(bot, target) {
+  const targetAngle = Math.atan2(
+    target.y - bot.y,
+    target.x - bot.x
+  );
+
+  let bestDirection = targetAngle;
+  let bestScore = -Infinity;
+
+  // Check 72 possible directions.
+  for (let i = 0; i < 72; i++) {
+    const angle = i * (Math.PI * 2 / 72);
+
+    const dx = Math.cos(angle);
+    const dy = Math.sin(angle);
+
+    let clearance = 0;
+    let blocked = false;
+
+    // Check how much open space is ahead.
+    for (const distance of [25, 50, 75, 100, 125]) {
+      const testX = bot.x + dx * distance;
+      const testY = bot.y + dy * distance;
+
+      if (botPositionBlocked(testX, testY, bot)) {
+        blocked = true;
+        break;
+      }
+
+      clearance++;
+    }
+
+    if (blocked || clearance === 0) continue;
+
+    // Prefer directions that approach the loot.
+    const alignment = Math.cos(angle - targetAngle);
+
+    const score =
+      alignment * 100 +
+      clearance * 18 +
+      random(0, 3);
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestDirection = angle;
+    }
+  }
+
+  return bestDirection;
+}
 // ============================================
 // 360 DEGREE BOT NAVIGATION
 // VERSION 0.5.1
@@ -982,6 +1036,8 @@ continue;
       }
 
       bot.lootTarget = null;
+      lootPathTimer: 0,
+lootPathDirection: 0,
     }
 
     // Look for loot when not already searching.
@@ -1011,8 +1067,18 @@ continue;
         collectBotLoot(bot, item);
         bot.state = "Wandering";
       } else {
-        desiredDirection = Math.atan2(dy, dx);
-      }
+  bot.lootPathTimer -= dt;
+
+  // Recalculate the route periodically.
+  if (bot.lootPathTimer <= 0) {
+    bot.lootPathDirection =
+      chooseBotLootDirection(bot, bot.lootTarget);
+
+    bot.lootPathTimer = 0.45;
+  }
+
+  desiredDirection = bot.lootPathDirection;
+}
     }
 
     // Wander when there is no loot target.
@@ -1397,3 +1463,4 @@ document.getElementById("status").textContent =
   "Version 0.2.0 | Island loaded | 49 AI bots deployed";
 updateCamera();
 requestAnimationFrame(gameLoop);
+//space filler
