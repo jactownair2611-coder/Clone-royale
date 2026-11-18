@@ -459,11 +459,10 @@ for (let i = 0; i < 49; i++) {
 
     color: "#e75b59",
 
-    alive: true,
+alive: true,
+health: 100,
 
-    team: 0,
-
-    state: "Wandering",
+team: 0,
     inventory: {
   weapons: [],
   ammo: 0,
