@@ -486,7 +486,8 @@ lootTarget: null,
 lootPathTimer: 0,
 lootPathDirection: 0
 
-});
+  });
+}
 // ============================================
 // INTERIOR COLLISION
 // ============================================
