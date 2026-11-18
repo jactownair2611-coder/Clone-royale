@@ -1503,7 +1503,7 @@ drawLoot(ctx);
   ctx.restore();
 
   drawMinimap();
-
+drawInventoryHUD();
 }
 
 // ============================================
