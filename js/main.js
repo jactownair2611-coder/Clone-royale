@@ -482,8 +482,11 @@ targetAimAngle: 0,
 lookDirection: 1,
 lookTimer: random(1, 3),
 
-})
+lootTarget: null,
+lootPathTimer: 0,
+lootPathDirection: 0
 
+});
 // ============================================
 // INTERIOR COLLISION
 // ============================================
@@ -1023,8 +1026,8 @@ function updateBots(dt) {
 updateBotIdle(bot, dt);
 
 if (!bot.isMoving) {
-  continue;smoothBotTurning(bot, dt);
-continue;
+  smoothBotTurning(bot, dt);
+  continue;
 }
     // Release invalid loot targets.
     if (
@@ -1036,7 +1039,8 @@ continue;
       }
 
       bot.lootTarget = null;
-      lootPathTimer: 0,
+bot.lootPathTimer = 0;
+}
     }
 
     // Look for loot when not already searching.
