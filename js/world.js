@@ -378,7 +378,19 @@ tryBuilding(2850, 2450, 240, 175, "research", 55);
 // ============================================
 
 tryBuilding(1660, 2290, 480, 300, "mall", 70);
+// ============================================
+// PARKING LOTS - VERSION 0.4.5
+// ============================================
 
+export const parkingLots = [
+  {
+    x: 2160,
+    y: 2310,
+    w: 360,
+    h: 300,
+    spaces: 16
+  }
+];
 
 // ============================================
 // AIRPORT RUNWAYS
@@ -425,7 +437,71 @@ for (let i = 0; i < 1450; i++) {
 // ============================================
 // DRAW HELPERS
 // ============================================
+function drawParkingLots(ctx) {
+  for (const lot of parkingLots) {
+    // Driveway connecting to the southern road
+    ctx.lineCap = "round";
+    ctx.strokeStyle = "#777f7d";
+    ctx.lineWidth = 55;
 
+    ctx.beginPath();
+    ctx.moveTo(lot.x + lot.w / 2, lot.y + lot.h);
+    ctx.lineTo(lot.x + lot.w / 2, 2830);
+    ctx.stroke();
+
+    // Parking lot shadow
+    ctx.fillStyle = "rgba(0,0,0,0.20)";
+    ctx.fillRect(lot.x + 6, lot.y + 7, lot.w, lot.h);
+
+    // Asphalt
+    ctx.fillStyle = "#626b6b";
+    ctx.fillRect(lot.x, lot.y, lot.w, lot.h);
+
+    // Curb
+    ctx.strokeStyle = "#c5bea8";
+    ctx.lineWidth = 9;
+    ctx.strokeRect(lot.x, lot.y, lot.w, lot.h);
+
+    // Parking spaces
+    ctx.strokeStyle = "#e8e8dc";
+    ctx.lineWidth = 2;
+
+    const columns = 8;
+    const spacing = lot.w / columns;
+
+    for (let i = 0; i <= columns; i++) {
+      const x = lot.x + i * spacing;
+
+      ctx.beginPath();
+      ctx.moveTo(x, lot.y + 25);
+      ctx.lineTo(x, lot.y + 125);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(x, lot.y + 175);
+      ctx.lineTo(x, lot.y + 275);
+      ctx.stroke();
+    }
+
+    // Center driving aisle
+    ctx.fillStyle = "rgba(255,255,255,0.12)";
+    ctx.fillRect(
+      lot.x + 5,
+      lot.y + 137,
+      lot.w - 10,
+      26
+    );
+
+    // Entrance arrow
+    ctx.fillStyle = "#f5f5e8";
+    ctx.beginPath();
+    ctx.moveTo(lot.x + lot.w / 2, lot.y + lot.h - 12);
+    ctx.lineTo(lot.x + lot.w / 2 - 12, lot.y + lot.h - 32);
+    ctx.lineTo(lot.x + lot.w / 2 + 12, lot.y + lot.h - 32);
+    ctx.closePath();
+    ctx.fill();
+  }
+}
 function roundedRect(ctx, x, y, w, h, r) {
   const rr = Math.min(r, w / 2, h / 2);
 
@@ -918,6 +994,7 @@ function drawPOIs(ctx) {
 // ============================================
 
 export function drawWorld(ctx) {
+  drawParkingLots(ctx);
   drawWater(ctx);
   drawIsland(ctx);
   drawGrass(ctx);
