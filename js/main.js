@@ -472,7 +472,11 @@ for (let i = 0; i < 49; i++) {
 },
 
 lootTarget: null,
-
+idleAction: "none",
+idleTimer: random(3, 8),
+lookAngle: 0,
+selectedWeapon: 0,
+isMoving: true,
     aimAngle: 0,
 
   });
@@ -814,11 +818,86 @@ function chooseBotDirection(bot) {
 // ============================================
 // AI BOT UPDATE - VERSION 0.5.0
 // ============================================
+// ============================================
+// BOT IDLE PERSONALITIES
+// VERSION 0.5.6
+// ============================================
 
+function updateBotIdle(bot, dt) {
+  if (bot.lootTarget) {
+    bot.idleAction = "none";
+    bot.isMoving = true;
+    return;
+  }
+
+  bot.idleTimer -= dt;
+
+  if (bot.idleTimer > 0) return;
+
+  if (bot.idleAction === "none") {
+    const actions = ["look", "inspect", "wander"];
+
+    if (
+      bot.inventory.medkits > 0 &&
+      bot.health < 65
+    ) {
+      actions.push("heal");
+    }
+
+    const action = actions[
+      Math.floor(Math.random() * actions.length)
+    ];
+
+    bot.idleAction = action;
+
+    if (action === "look" || action === "inspect") {
+      bot.isMoving = false;
+      bot.idleTimer = random(1.5, 3);
+    } else if (action === "heal") {
+      bot.isMoving = false;
+      bot.idleTimer = 2;
+    } else {
+      bot.idleTimer = random(3, 6);
+    }
+
+    return;
+  }
+
+  if (bot.idleAction === "look") {
+    bot.lookAngle = random(-Math.PI, Math.PI);
+  }
+
+  if (bot.idleAction === "inspect") {
+    if (bot.inventory.weapons.length > 0) {
+      bot.selectedWeapon = Math.floor(
+        Math.random() * bot.inventory.weapons.length
+      );
+    }
+  }
+
+  if (bot.idleAction === "heal") {
+    if (
+      bot.inventory.medkits > 0 &&
+      bot.health < 100
+    ) {
+      bot.health = Math.min(100, bot.health + 35);
+      bot.inventory.medkits--;
+    }
+  }
+
+  bot.idleAction = "none";
+  bot.isMoving = true;
+  bot.idleTimer = random(5, 12);
+}
 function updateBots(dt) {
   for (const bot of bots) {
     if (!bot.alive) continue;
+updateBotIdle(bot, dt);
 
+if (!bot.isMoving) {
+  bot.aimAngle = bot.lookAngle || bot.direction;
+  continue;
+}
     // Release invalid loot targets.
     if (
       bot.lootTarget &&
@@ -864,15 +943,16 @@ function updateBots(dt) {
 
     // Wander when there is no loot target.
     if (!bot.lootTarget) {
-      bot.timer -= dt;
+  bot.timer -= dt;
 
-      if (bot.timer <= 0) {
-        bot.direction = chooseBotDirection(bot);
-        bot.timer = random(2, 4);
-      }
+  if (bot.timer <= 0) {
+    bot.direction += random(-Math.PI * 0.85, Math.PI * 0.85);
 
-      desiredDirection = bot.direction;
-    }
+    bot.timer = random(2, 6);
+  }
+
+  desiredDirection = bot.direction;
+}
 
     // Blend movement with obstacle avoidance.
     const avoidance = getBotAvoidance(bot);
