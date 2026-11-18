@@ -826,29 +826,6 @@ function findBotLootTarget(bot) {
 
   return closestItem;
 }
-
-function addBotInventoryItem(bot, item) {
-
-  // Automatically collect ammunition.
-  if (item.type === "ammo") {
-    bot.inventory.ammo[item.name] =
-      (bot.inventory.ammo[item.name] || 0) + item.amount;
-
-    return true;
-  }
-
-  // Stack medkits and shields.
-  if (item.type === "medkit" || item.type === "shield") {
-    const existing = bot.inventory.slots.find(
-      slot => slot && slot.type === item.type
-    );
-
-    if (existing) {
-      existing.count = (existing.count || 1) + 1;
-      return true;
-    }
-  }
-
   // Find an empty slot.
   const emptySlot = bot.inventory.slots.findIndex(
     slot => slot === null
