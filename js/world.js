@@ -435,6 +435,52 @@ for (let i = 0; i < 1450; i++) {
 }
 
 // ============================================
+// ROAD INTERSECTIONS - VERSION 0.4.6
+// ============================================
+
+const intersections = [
+  { x: 850, y: 1200, w: 150, h: 130 },
+  { x: 1500, y: 1280, w: 160, h: 140 },
+  { x: 2100, y: 1250, w: 160, h: 140 },
+  { x: 2600, y: 1190, w: 150, h: 130 },
+  { x: 3150, y: 1160, w: 160, h: 140 }
+];
+
+function drawIntersections(ctx) {
+  for (const intersection of intersections) {
+    const { x, y, w, h } = intersection;
+
+    // Dark asphalt intersection surface
+    ctx.fillStyle = "#555e5d";
+    ctx.fillRect(x - w / 2, y - h / 2, w, h);
+
+    // Crosswalk stripes
+    ctx.fillStyle = "#eeeadd";
+
+    for (let i = 0; i < 6; i++) {
+      ctx.fillRect(
+        x - 48 + i * 18,
+        y - h / 2 + 8,
+        10,
+        25
+      );
+
+      ctx.fillRect(
+        x - 48 + i * 18,
+        y + h / 2 - 33,
+        10,
+        25
+      );
+    }
+
+    // Stop lines
+    ctx.fillStyle = "#f4f0df";
+    ctx.fillRect(x - 65, y - h / 2 + 39, 130, 4);
+    ctx.fillRect(x - 65, y + h / 2 - 43, 130, 4);
+  }
+}
+
+// ============================================
 // DRAW HELPERS
 // ============================================
 function drawParkingLots(ctx) {
@@ -999,6 +1045,7 @@ export function drawWorld(ctx) {
   drawIsland(ctx);
   drawGrass(ctx);
   drawRoads(ctx);
+  drawIntersections(ctx);
   drawRunways(ctx);
   drawBuildings(ctx);
   drawTrees(ctx);
